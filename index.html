@@ -355,8 +355,96 @@
     function sparkle(x, y, emoji) { const s = document.createElement('div'); s.className = 'sparkle'; s.textContent = emoji; s.style.left = `${x}px`; s.style.top = `${y}px`; document.body.appendChild(s); setTimeout(() => s.remove(), 900); }
     function resetWorld() { stars = 0; gems = 0; level = 1; missionIndex = 0; quizIndex = 0; selected = 'wood'; mode = 'build'; initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); setMode('build'); setMessage('Mundo nuevo creado. ¡A construir!'); }
 
+    let memoryCards = [];
+    let firstMemoryCard = null;
+    let memoryLocked = false;
+
+    function resetMemoryGame() {
+      const animalsMemory = ['🐶','🐱','🐷','🐮','🐸','🐔'];
+      memoryCards = [...animalsMemory, ...animalsMemory]
+        .sort(() => Math.random() - 0.5)
+        .map((emoji, index) => ({
+          emoji,
+          index,
+          visible: false,
+          matched: false
+        }));
+
+      firstMemoryCard = null;
+      memoryLocked = false;
+      renderMemoryGame();
+      setMessage('Busca las parejas de animales.');
+    }
+
+    function renderMemoryGame() {
+      const grid = document.getElementById('memoryGrid');
+      grid.innerHTML = '';
+
+      memoryCards.forEach((card, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'memory-card';
+
+        if (!card.visible && !card.matched) {
+          btn.classList.add('hidden-card');
+          btn.textContent = '❓';
+        } else {
+          btn.textContent = card.emoji;
+        }
+
+        if (card.matched) {
+          btn.classList.add('matched');
+        }
+
+        btn.onclick = () => flipMemoryCard(index);
+        grid.appendChild(btn);
+      });
+    }
+
+    function flipMemoryCard(index) {
+      if (memoryLocked) return;
+
+      const card = memoryCards[index];
+      if (card.visible || card.matched) return;
+
+      card.visible = true;
+      renderMemoryGame();
+
+      if (firstMemoryCard === null) {
+        firstMemoryCard = index;
+        return;
+      }
+
+      const first = memoryCards[firstMemoryCard];
+
+      if (first.emoji === card.emoji) {
+        first.matched = true;
+        card.matched = true;
+        firstMemoryCard = null;
+        addStars(3);
+        setMessage('¡Pareja encontrada!');
+        sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
+
+        if (memoryCards.every(c => c.matched)) {
+          addStars(10);
+          setMessage('¡Has encontrado todas las parejas!');
+          sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆');
+        }
+
+        renderMemoryGame();
+      } else {
+        memoryLocked = true;
+        setTimeout(() => {
+          first.visible = false;
+          card.visible = false;
+          firstMemoryCard = null;
+          memoryLocked = false;
+          setMessage('Casi casi. Prueba otra vez.');
+          renderMemoryGame();
+        }, 800);
+      }
+    }
     window.addEventListener('resize', () => { const newCols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP; if (newCols !== cols) { cols = newCols; resetWorld(); } });
-    initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud();
+    initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(); setMode('build'); setMessage('Mundo nuevo creado. ¡A construir!');
   </script>
 </body>
 </html>
