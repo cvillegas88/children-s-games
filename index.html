@@ -2,696 +2,1349 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aventura de Cubitos para Tomás</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Aventura de Cubitos</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --azul: #5ec8ff;
+      --azul-oscuro: #2364aa;
+      --verde: #62d45f;
+      --verde-oscuro: #2f9e44;
+      --amarillo: #ffd95a;
+      --naranja: #ff9f43;
+      --rojo: #ff6b6b;
+      --morado: #8e7dff;
+      --rosa: #ff8bd1;
+      --texto: #26364d;
+      --panel: rgba(255, 255, 255, 0.88);
+      --sombra: 0 12px 28px rgba(24, 55, 90, 0.22);
+    }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(#78d7ff 0%, #b8f7ff 42%, #8ee875 42%, #63c94e 100%);
       min-height: 100vh;
-      color: #233044;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--texto);
+      overflow: hidden;
+      background: linear-gradient(#62cfff 0%, #b7f5ff 47%, #96ea65 47%, #64cb52 100%);
       user-select: none;
-      overflow-x: hidden;
+      touch-action: manipulation;
     }
 
-    .app { max-width: 1180px; margin: auto; padding: 12px; }
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 14px;
+      padding: 14px;
+    }
 
-    header {
-      background: rgba(255,255,255,0.96);
-      border: 5px solid #3b2f2f;
+    .game-area {
+      position: relative;
+      overflow: hidden;
+      border-radius: 30px;
+      background: linear-gradient(#7edcff 0%, #c8f8ff 48%, #8ee875 48%, #61c94f 100%);
+      box-shadow: var(--sombra);
+      border: 6px solid rgba(255, 255, 255, 0.7);
+    }
+
+    .top-bar {
+      position: absolute;
+      z-index: 20;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .title-card,
+    .score-card {
+      pointer-events: auto;
+      background: var(--panel);
+      border: 4px solid white;
+      box-shadow: 0 8px 18px rgba(35, 74, 110, 0.18);
+      border-radius: 22px;
+      padding: 10px 16px;
+      backdrop-filter: blur(5px);
+    }
+
+    .title-card h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.7vw, 34px);
+      letter-spacing: 0.4px;
+    }
+
+    .title-card p {
+      margin: 3px 0 0;
+      font-size: clamp(13px, 1.3vw, 17px);
+      font-weight: 700;
+      color: #48627e;
+    }
+
+    .score-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: clamp(18px, 2vw, 28px);
+      font-weight: 900;
+    }
+
+    .world {
+      position: absolute;
+      inset: 0;
+    }
+
+    .sun {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      top: 92px;
+      right: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff6a2 0%, #ffd54d 60%, #ffb703 100%);
+      box-shadow: 0 0 35px rgba(255, 213, 77, 0.7);
+      cursor: pointer;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .cloud {
+      position: absolute;
+      width: 130px;
+      height: 48px;
+      background: white;
+      border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(87, 147, 180, 0.2);
+      cursor: pointer;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .cloud::before {
+      width: 62px;
+      height: 62px;
+      left: 18px;
+      top: -28px;
+    }
+
+    .cloud::after {
+      width: 76px;
+      height: 76px;
+      right: 16px;
+      top: -40px;
+    }
+
+    .cloud.one { top: 120px; left: 120px; animation: drift 12s ease-in-out infinite; }
+    .cloud.two { top: 210px; left: 44%; transform: scale(0.8); animation: drift 16s ease-in-out infinite reverse; }
+
+    .house {
+      position: absolute;
+      left: 7%;
+      bottom: 15%;
+      width: min(260px, 28vw);
+      height: min(210px, 30vh);
+      cursor: pointer;
+    }
+
+    .house-roof {
+      position: absolute;
+      left: 5%;
+      top: 0;
+      width: 90%;
+      height: 45%;
+      background: #ff6b6b;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      filter: drop-shadow(0 8px 5px rgba(0,0,0,0.12));
+    }
+
+    .house-body {
+      position: absolute;
+      left: 12%;
+      bottom: 0;
+      width: 76%;
+      height: 68%;
+      background: #ffe08a;
+      border: 6px solid #fff3bf;
       border-radius: 18px;
-      box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.25);
+      box-shadow: 0 10px 16px rgba(84, 76, 44, 0.2);
+    }
+
+    .door {
+      position: absolute;
+      left: 39%;
+      bottom: 0;
+      width: 24%;
+      height: 52%;
+      background: #b5651d;
+      border-radius: 18px 18px 4px 4px;
+      transform-origin: left center;
+      transition: transform 0.35s ease;
+    }
+
+    .door.open {
+      transform: perspective(400px) rotateY(-46deg);
+      background: #8d4b17;
+    }
+
+    .window {
+      position: absolute;
+      top: 28%;
+      width: 22%;
+      height: 22%;
+      background: #8be9ff;
+      border: 5px solid white;
+      border-radius: 12px;
+    }
+
+    .window.left { left: 12%; }
+    .window.right { right: 12%; }
+
+    .tree {
+      position: absolute;
+      bottom: 14%;
+      right: 7%;
+      width: min(160px, 15vw);
+      height: min(230px, 34vh);
+      cursor: pointer;
+    }
+
+    .tree-trunk {
+      position: absolute;
+      bottom: 0;
+      left: 42%;
+      width: 20%;
+      height: 45%;
+      background: #9c5b2e;
+      border-radius: 18px;
+    }
+
+    .tree-top {
+      position: absolute;
+      bottom: 32%;
+      left: 4%;
+      width: 92%;
+      height: 66%;
+      background: #2fbd54;
+      border-radius: 50%;
+      box-shadow: inset -15px -12px 0 rgba(0,0,0,0.08);
+    }
+
+    .apple {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #ff4757;
+      border-radius: 50%;
+      box-shadow: inset -4px -3px 0 rgba(0,0,0,0.12);
+    }
+
+    .apple.a1 { left: 32%; top: 22%; }
+    .apple.a2 { right: 26%; top: 34%; }
+    .apple.a3 { left: 48%; top: 55%; }
+
+    .car {
+      position: absolute;
+      left: 43%;
+      bottom: 12%;
+      width: min(210px, 22vw);
+      height: min(105px, 15vh);
+      cursor: pointer;
+      transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .car-body {
+      position: absolute;
+      bottom: 25%;
+      width: 100%;
+      height: 55%;
+      background: var(--rojo);
+      border-radius: 28px 38px 20px 20px;
+      border: 5px solid rgba(255,255,255,0.75);
+      box-shadow: 0 10px 12px rgba(0,0,0,0.15);
+    }
+
+    .car-window {
+      position: absolute;
+      top: 8%;
+      left: 31%;
+      width: 38%;
+      height: 38%;
+      background: #bff4ff;
+      border: 5px solid white;
+      border-radius: 26px 26px 8px 8px;
+    }
+
+    .wheel {
+      position: absolute;
+      bottom: 4%;
+      width: 34px;
+      height: 34px;
+      background: #26364d;
+      border: 7px solid #8795a8;
+      border-radius: 50%;
+    }
+
+    .wheel.left { left: 14%; }
+    .wheel.right { right: 14%; }
+
+    .animal {
+      position: absolute;
+      left: 27%;
+      bottom: 15%;
+      width: min(130px, 14vw);
+      height: min(115px, 15vh);
+      cursor: pointer;
+      transform-origin: bottom center;
+    }
+
+    .animal-body {
+      position: absolute;
+      bottom: 5%;
+      left: 14%;
+      width: 72%;
+      height: 58%;
+      background: #ffb86b;
+      border-radius: 42% 42% 35% 35%;
+      box-shadow: inset -10px -8px 0 rgba(0,0,0,0.08);
+    }
+
+    .animal-head {
+      position: absolute;
+      left: 31%;
+      top: 5%;
+      width: 44%;
+      height: 46%;
+      background: #ffb86b;
+      border-radius: 50%;
+    }
+
+    .ear {
+      position: absolute;
+      top: -5%;
+      width: 26%;
+      height: 34%;
+      background: #e8924f;
+      border-radius: 50%;
+    }
+
+    .ear.left { left: 23%; }
+    .ear.right { right: 23%; }
+
+    .eye {
+      position: absolute;
+      top: 37%;
+      width: 7px;
+      height: 7px;
+      background: #26364d;
+      border-radius: 50%;
+    }
+
+    .eye.left { left: 37%; }
+    .eye.right { right: 37%; }
+
+    .nose {
+      position: absolute;
+      left: 45%;
+      top: 52%;
+      width: 13%;
+      height: 10%;
+      background: #26364d;
+      border-radius: 50%;
+    }
+
+    .flower-bed {
+      position: absolute;
+      left: 9%;
+      bottom: 5%;
+      right: 9%;
+      height: 70px;
+      pointer-events: none;
+    }
+
+    .flower {
+      position: absolute;
+      bottom: 0;
+      width: 42px;
+      height: 62px;
+      pointer-events: auto;
+      cursor: pointer;
+      transform-origin: bottom center;
+    }
+
+    .stem {
+      position: absolute;
+      bottom: 0;
+      left: 48%;
+      width: 5px;
+      height: 42px;
+      background: #219653;
+      border-radius: 5px;
+    }
+
+    .petal {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: var(--rosa);
+      border-radius: 50%;
+      top: 0;
+      left: 11px;
+    }
+
+    .petal.p1 { transform: translateY(-4px); }
+    .petal.p2 { transform: translateX(-11px) translateY(7px); }
+    .petal.p3 { transform: translateX(11px) translateY(7px); }
+    .petal.p4 { transform: translateY(17px); }
+    .center {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: var(--amarillo);
+      border-radius: 50%;
+      top: 14px;
+      left: 13px;
+    }
+
+    .flower.f1 { left: 8%; }
+    .flower.f2 { left: 22%; transform: scale(0.86); }
+    .flower.f3 { left: 58%; transform: scale(1.05); }
+    .flower.f4 { left: 75%; transform: scale(0.9); }
+
+    .play-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      padding: 105px 24px 24px;
+      background: rgba(255,255,255,0.16);
+    }
+
+    .play-layer.active {
+      display: block;
+    }
+
+    .activity-card {
+      height: 100%;
+      border-radius: 28px;
+      background: rgba(255,255,255,0.72);
+      border: 5px solid white;
+      box-shadow: 0 12px 28px rgba(24, 55, 90, 0.18);
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .activity-title {
+      margin: 0 0 12px;
+      font-size: clamp(22px, 3vw, 36px);
+      text-align: center;
+    }
+
+    .blocks-zone {
+      height: calc(100% - 58px);
+      display: grid;
+      grid-template-columns: 1fr 230px;
+      gap: 16px;
+    }
+
+    .build-area {
+      position: relative;
+      border-radius: 24px;
+      background: linear-gradient(#dff9ff, #f8fff0);
+      border: 4px dashed rgba(35,100,170,0.35);
+      overflow: hidden;
+    }
+
+    .ground-line {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: 50px;
+      height: 10px;
+      background: rgba(47, 158, 68, 0.4);
+      border-radius: 999px;
+    }
+
+    .palette {
+      border-radius: 24px;
+      background: rgba(255,255,255,0.78);
+      border: 4px solid white;
       padding: 12px;
       display: grid;
-      grid-template-columns: 1fr auto;
       gap: 10px;
-      align-items: center;
-      margin-bottom: 12px;
+      align-content: start;
     }
 
-    h1 { margin: 0; font-size: clamp(26px, 5vw, 48px); letter-spacing: 1px; text-shadow: 3px 3px 0 #c7f9cc; }
-    .subtitle { font-weight: bold; color: #4b5563; margin-top: 4px; font-size: 16px; }
-    .hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-weight: 900; }
-    .pill { background: #fff1a8; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; box-shadow: 0 4px 0 #2b211e; font-size: 18px; }
-
-    .layout { display: grid; grid-template-columns: 1fr 340px; gap: 12px; align-items: start; }
-    .panel { background: rgba(255,255,255,0.95); border: 5px solid #3b2f2f; border-radius: 18px; box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.22); padding: 12px; }
-    .world-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .message { flex: 1; min-height: 54px; background: #e0f2fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; font-size: 20px; font-weight: 900; display: flex; align-items: center; }
-
-    button { cursor: pointer; border: 4px solid #3b2f2f; border-radius: 14px; background: #fef3c7; box-shadow: 0 5px 0 #2b211e; font-weight: 900; font-family: inherit; transition: transform 0.08s, box-shadow 0.08s, filter 0.08s; }
-    button:active { transform: translateY(4px) scale(0.98); box-shadow: 0 1px 0 #2b211e; filter: brightness(0.95); }
-    .small-btn { padding: 9px 11px; font-size: 16px; }
-
-    .game-area { position: relative; background: linear-gradient(#6fd3ff 0%, #9be7ff 58%, #7fd957 58%, #70c948 100%); border: 5px solid #3b2f2f; border-radius: 18px; padding: 10px; overflow: hidden; }
-    .sun { position: absolute; top: 18px; right: 26px; width: 58px; height: 58px; background: #fde047; border: 5px solid #3b2f2f; box-shadow: 0 0 0 8px rgba(253,224,71,0.35); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 1; animation: sunMove 8s infinite linear; }
-    .cloud { position: absolute; top: 45px; left: 28px; font-size: 48px; z-index: 1; animation: cloudMove 7s infinite ease-in-out; }
-    .helper { position: absolute; left: 90px; top: 32px; z-index: 2; font-size: 44px; animation: helperMove 1.8s infinite ease-in-out; }
-
-    .grid-world { position: relative; display: grid; grid-template-columns: repeat(16, minmax(28px, 1fr)); gap: 3px; z-index: 3; margin-top: 86px; }
-    .cell { aspect-ratio: 1 / 1; min-height: 32px; border-radius: 5px; border: 2px solid rgba(59,47,47,0.28); background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 3vw, 30px); box-shadow: inset 0 -5px rgba(0,0,0,0.12); position: relative; }
-    .empty { background: rgba(255,255,255,0.12); box-shadow: none; border-color: rgba(255,255,255,0.15); }
-    .grass { background: #4ade80; } .dirt { background: #9a5a28; } .stone { background: #9ca3af; } .wood { background: #b7791f; } .leaf { background: #22c55e; } .water { background: #38bdf8; } .flower { background: #f9a8d4; } .gold { background: #facc15; } .diamond { background: #67e8f9; } .chest { background: #d97706; } .bed { background: #f87171; } .torch { background: #fdba74; } .door { background: #92400e; } .window { background: #bfdbfe; }
-
-    .target-cell {
-      outline: 4px dashed #fef08a;
-      outline-offset: -5px;
-      animation: targetPulse 1s infinite;
+    .block-btn,
+    .big-action {
+      border: 0;
+      border-radius: 20px;
+      min-height: 58px;
+      font-size: 22px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 7px 0 rgba(0,0,0,0.18);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
-    .target-cell::after {
-      content: "👇";
+    .block-btn:active,
+    .big-action:active,
+    .menu-button:active {
+      transform: translateY(4px) scale(0.98);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+    }
+
+    .placed-block {
       position: absolute;
-      top: -30px;
-      font-size: 28px;
-      animation: fingerBounce 0.8s infinite;
-      z-index: 10;
+      width: 92px;
+      height: 58px;
+      border-radius: 15px;
+      border: 4px solid rgba(255,255,255,0.72);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.14);
+      cursor: grab;
+      touch-action: none;
     }
 
-    .ghost {
-      opacity: 0.55;
-      filter: grayscale(0.2);
+    .placed-block::before,
+    .placed-block::after {
+      content: "";
+      position: absolute;
+      top: 9px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.45);
     }
 
-    .steve, .mob { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 4; }
-    .steve { font-size: clamp(28px, 4vw, 38px); animation: wiggle 1.2s infinite ease-in-out; }
-    .mob { font-size: clamp(24px, 4vw, 34px); animation: hop 1.8s infinite ease-in-out; }
+    .placed-block::before { left: 22px; }
+    .placed-block::after { right: 22px; }
 
-    h2 { margin: 0 0 10px; font-size: 24px; }
-    .inventory { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-    .inv-btn { min-height: 78px; padding: 6px; font-size: 28px; background: #f8fafc; }
-    .inv-btn span { display: block; font-size: 13px; margin-top: 3px; }
-    .inv-btn.active { background: #fef08a; outline: 5px solid #22c55e; }
-    .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .tool-btn { padding: 12px 8px; font-size: 18px; }
-    .tool-btn.active { background: #bfdbfe; outline: 4px solid #2563eb; }
+    .color-zone,
+    .count-zone {
+      height: calc(100% - 58px);
+      display: grid;
+      grid-template-columns: 1fr 245px;
+      gap: 16px;
+    }
 
-    .builder-card { background: #dcfce7; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
-    .builder-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
-    .builder-step { font-size: 18px; font-weight: 900; background: white; border: 3px solid #3b2f2f; border-radius: 14px; padding: 9px; margin-bottom: 8px; }
-    .progress { height: 24px; background: white; border: 4px solid #3b2f2f; border-radius: 999px; overflow: hidden; margin-top: 8px; }
-    .progress-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #facc15); width: 0%; transition: width .25s ease; }
+    .paint-board,
+    .count-board {
+      position: relative;
+      border-radius: 24px;
+      background: linear-gradient(#effcff, #ffffff);
+      border: 4px dashed rgba(35,100,170,0.3);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding: 20px;
+    }
 
-    .quiz { background: #ede9fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
-    .quiz-question { font-size: 19px; font-weight: 900; margin-bottom: 10px; }
-    .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .answer-btn { min-height: 68px; font-size: 22px; background: #fff7ed; }
-    .voice-btn { width: 100%; padding: 13px; margin-top: 10px; font-size: 18px; background: #dcfce7; }
-    .voice-btn.listening { background: #fecaca; animation: pulse 1s infinite; }
+    .paint-shape {
+      width: min(170px, 20vw);
+      height: min(170px, 20vw);
+      border-radius: 35px;
+      background: #ffd95a;
+      border: 6px solid rgba(255,255,255,0.95);
+      box-shadow: 0 12px 0 rgba(0,0,0,0.13);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: clamp(40px, 7vw, 76px);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
 
-    .actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
-    .big-action { padding: 13px; font-size: 18px; background: #dbeafe; }
-    .danger { background: #fee2e2; } .good { background: #dcfce7; } .purple { background: #ede9fe; } .yellow { background: #fef9c3; }
-    .guide { margin-top: 12px; font-size: 15px; line-height: 1.35; font-weight: 700; color: #374151; background: #fff7ed; border: 4px solid #3b2f2f; border-radius: 16px; padding: 10px; }
-    .sparkle { position: fixed; pointer-events: none; z-index: 999; font-size: 52px; animation: sparkle 900ms forwards ease-out; }
+    .paint-shape.circle { border-radius: 50%; }
+    .paint-shape.triangle {
+      width: 0;
+      height: 0;
+      border-left: 92px solid transparent;
+      border-right: 92px solid transparent;
+      border-bottom: 166px solid #ffd95a;
+      background: transparent !important;
+      box-shadow: none;
+      border-radius: 0;
+      position: relative;
+    }
 
-    .memory-game { margin-top: 14px; background: #fff7ed; border: 5px solid #3b2f2f; border-radius: 18px; padding: 12px; }
-    .memory-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-    .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .memory-card { min-height: 78px; font-size: 38px; background: #fde68a; position: relative; }
-    .memory-card.soft-hidden { background: #fff7ed; opacity: .85; }
-    .memory-card.soft-hidden span { opacity: .42; }
-    .memory-card.selected-card { outline: 5px solid #60a5fa; background: #dbeafe; }
-    .memory-card.matched { background: #bbf7d0; }
+    .paint-shape.triangle span {
+      position: absolute;
+      left: -31px;
+      top: 68px;
+    }
 
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
-    @keyframes sparkle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1.6); opacity: 0; } }
-    @keyframes wiggle { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
-    @keyframes hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    @keyframes sunMove { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes cloudMove { 0%,100% { transform: translateX(0); } 50% { transform: translateX(45px); } }
-    @keyframes helperMove { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    @keyframes targetPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-    @keyframes fingerBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .color-btn {
+      border: 5px solid white;
+      border-radius: 20px;
+      min-height: 62px;
+      cursor: pointer;
+      box-shadow: 0 7px 0 rgba(0,0,0,0.16);
+    }
 
-    /* ================================
-   OPTIMIZACIÓN TABLET HORIZONTAL
-   Menú compacto siempre a la derecha
-================================ */
-.layout {
-  grid-template-columns: minmax(0, 1fr) 300px;
-  align-items: start;
-}
+    .color-btn.selected {
+      outline: 6px solid #26364d;
+    }
 
-aside.panel {
-  position: sticky;
-  top: 8px;
-  max-height: calc(100vh - 16px);
-  overflow-y: auto;
-  padding: 9px;
-}
+    .count-item {
+      width: min(110px, 12vw);
+      height: min(110px, 12vw);
+      border-radius: 32px;
+      background: #ffb86b;
+      border: 5px solid white;
+      box-shadow: 0 8px 0 rgba(0,0,0,0.14);
+      display: grid;
+      place-items: center;
+      font-size: clamp(34px, 5vw, 60px);
+      animation: popIn 0.35s ease both;
+    }
 
-aside.panel h2 {
-  font-size: 20px;
-  margin-bottom: 6px;
-}
+    .number-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-content: center;
+    }
 
-.inventory {
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  margin-bottom: 8px;
-}
+    .num-btn {
+      min-height: 86px;
+      border: 5px solid white;
+      border-radius: 24px;
+      background: #ffd95a;
+      color: var(--texto);
+      font-size: 42px;
+      font-weight: 900;
+      box-shadow: 0 8px 0 rgba(0,0,0,0.18);
+      cursor: pointer;
+    }
 
-.inv-btn {
-  min-height: 58px;
-  padding: 4px;
-  font-size: 23px;
-  border-width: 3px;
-  border-radius: 12px;
-  box-shadow: 0 3px 0 #2b211e;
-}
+    .side-menu {
+      height: 100%;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 6px solid rgba(255,255,255,0.75);
+      box-shadow: var(--sombra);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
 
-.inv-btn span {
-  font-size: 10px;
-  margin-top: 1px;
-}
+    .menu-header {
+      background: linear-gradient(135deg, #fff1a8, #ffd95a);
+      border-radius: 24px;
+      padding: 12px;
+      text-align: center;
+      border: 4px solid white;
+    }
 
-.inv-btn.active {
-  outline: 4px solid #22c55e;
-}
+    .menu-header h2 {
+      margin: 0;
+      font-size: 24px;
+    }
 
-.tools {
-  gap: 6px;
-  margin-bottom: 8px;
-}
+    .menu-header p {
+      margin: 3px 0 0;
+      font-weight: 800;
+      color: #5d6d7e;
+      font-size: 13px;
+    }
 
-.tool-btn {
-  padding: 8px 5px;
-  font-size: 15px;
-  border-width: 3px;
-  box-shadow: 0 3px 0 #2b211e;
-}
+    .menu-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
 
-.builder-card,
-.quiz,
-.guide {
-  padding: 8px;
-  margin-bottom: 8px;
-  border-width: 4px;
-}
+    .menu-button {
+      border: 0;
+      min-height: 83px;
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 7px 0 rgba(0,0,0,0.16);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-weight: 900;
+      color: var(--texto);
+      font-size: 13px;
+      border: 4px solid rgba(255,255,255,0.9);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, outline 0.1s ease;
+    }
 
-.builder-title {
-  font-size: 17px;
-  margin-bottom: 5px;
-}
+    .menu-button .icon {
+      font-size: 33px;
+      line-height: 1;
+    }
 
-.builder-step {
-  font-size: 15px;
-  padding: 7px;
-  line-height: 1.2;
-}
+    .menu-button.active {
+      outline: 5px solid var(--azul-oscuro);
+      background: #e9f8ff;
+    }
 
-.progress {
-  height: 18px;
-  border-width: 3px;
-  margin-top: 6px;
-}
+    .message-box {
+      flex: 1;
+      min-height: 110px;
+      border-radius: 24px;
+      background: #f2fbff;
+      border: 4px solid white;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 19px;
+      font-weight: 900;
+      line-height: 1.25;
+      color: #31536e;
+    }
 
-.quiz-question {
-  font-size: 16px;
-  margin-bottom: 6px;
-}
+    .controls-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
-.answers {
-  gap: 6px;
-}
+    .small-btn {
+      border: 0;
+      border-radius: 19px;
+      background: #26364d;
+      color: white;
+      min-height: 52px;
+      font-weight: 900;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+    }
 
-.answer-btn {
-  min-height: 48px;
-  font-size: 17px;
-  padding: 5px;
-  border-width: 3px;
-  box-shadow: 0 3px 0 #2b211e;
-}
+    .celebration {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      overflow: hidden;
+    }
 
-.voice-btn {
-  padding: 8px;
-  margin-top: 7px;
-  font-size: 15px;
-  border-width: 3px;
-  box-shadow: 0 3px 0 #2b211e;
-}
+    .star-pop {
+      position: absolute;
+      font-size: 42px;
+      animation: starFly 1s ease-out forwards;
+    }
 
-.actions {
-  gap: 6px;
-}
+    .toast {
+      position: absolute;
+      z-index: 80;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.92);
+      border: 5px solid white;
+      border-radius: 24px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      padding: 12px 22px;
+      font-size: clamp(20px, 2.5vw, 34px);
+      font-weight: 900;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
 
-.big-action {
-  padding: 8px;
-  font-size: 15px;
-  border-width: 3px;
-  box-shadow: 0 3px 0 #2b211e;
-}
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-8px);
+    }
 
-.guide {
-  font-size: 13px;
-  line-height: 1.25;
-}
+    .hidden {
+      display: none !important;
+    }
 
-.game-area {
-  padding: 8px;
-}
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(8deg); }
+    }
 
-.grid-world {
-  margin-top: 72px;
-}
+    @keyframes drift {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(35px); }
+    }
 
-.cell {
-  min-height: 28px;
-}
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      35% { transform: translateY(-24px) scale(1.05); }
+      70% { transform: translateY(0) scale(0.96); }
+    }
 
-.memory-game {
-  margin-top: 10px;
-  padding: 10px;
-}
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0); }
+      25% { transform: rotate(-8deg); }
+      75% { transform: rotate(8deg); }
+    }
 
-.memory-header h2 {
-  font-size: 20px;
-}
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
 
-.memory-card {
-  min-height: 58px;
-  font-size: 30px;
-}
+    @keyframes starFly {
+      0% { transform: translateY(0) scale(0.4) rotate(0); opacity: 1; }
+      100% { transform: translateY(-150px) scale(1.3) rotate(180deg); opacity: 0; }
+    }
 
-@media (min-width: 901px) and (max-width: 1250px) {
-  .app {
-    max-width: 100vw;
-    padding: 6px;
-  }
+    .bounce { animation: bounce 0.5s ease; }
+    .wiggle { animation: wiggle 0.45s ease; }
 
-  header {
-    padding: 8px;
-    margin-bottom: 8px;
-  }
+    @media (max-width: 920px) {
+      .app {
+        grid-template-columns: 1fr 210px;
+        gap: 10px;
+        padding: 10px;
+      }
 
-  h1 {
-    font-size: 34px;
-  }
+      .side-menu {
+        padding: 9px;
+      }
 
-  .subtitle {
-    font-size: 14px;
-  }
+      .menu-header h2 { font-size: 19px; }
+      .menu-header p { font-size: 12px; }
+      .menu-button { min-height: 70px; font-size: 12px; }
+      .menu-button .icon { font-size: 27px; }
+      .message-box { font-size: 16px; padding: 8px; }
+      .blocks-zone,
+      .color-zone,
+      .count-zone {
+        grid-template-columns: 1fr 170px;
+      }
+    }
 
-  .pill {
-    font-size: 15px;
-    padding: 6px 9px;
-  }
-
-  .layout {
-    gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 285px;
-  }
-
-  .panel {
-    padding: 8px;
-    border-width: 4px;
-    box-shadow: 0 5px 0 #2b211e;
-  }
-
-  .message {
-    font-size: 17px;
-    min-height: 44px;
-  }
-}
-
-@media (max-width: 900px) {
-  header { grid-template-columns: 1fr; text-align: center; }
-  .hud { justify-content: center; }
-  .layout { grid-template-columns: 1fr; }
-  aside.panel {
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-  .grid-world { grid-template-columns: repeat(12, minmax(24px, 1fr)); }
-  .inventory { grid-template-columns: repeat(5, 1fr); }
-  .inv-btn { min-height: 62px; }
-  .memory-grid { grid-template-columns: repeat(3, 1fr); }
-}
+    @media (orientation: portrait) {
+      body { overflow: auto; }
+      .app {
+        min-height: 100vh;
+        height: auto;
+        grid-template-columns: 1fr;
+      }
+      .game-area {
+        height: 68vh;
+        min-height: 520px;
+      }
+      .side-menu {
+        height: auto;
+      }
+      .menu-buttons {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div>
-        <h1>⛏️ Aventura de Cubitos</h1>
-        <div class="subtitle">Construye la casita de Tomás, cuida animales y gana estrellas</div>
-      </div>
-      <div class="hud">
-        <div class="pill">⭐ <span id="stars">0</span></div>
-        <div class="pill">💎 <span id="gems">0</span></div>
-        <div class="pill">🏆 <span id="level">1</span></div>
-      </div>
-    </header>
-
-    <div class="layout">
-      <section class="panel">
-        <div class="world-top">
-          <div class="message" id="message">Hola Tomás. Vamos a construir una casita paso a paso.</div>
-          <button class="small-btn" onclick="speak(lastMessage)">🔊 Repetir</button>
+  <main class="app">
+    <section class="game-area" id="gameArea" aria-label="Zona de juego">
+      <div class="top-bar">
+        <div class="title-card">
+          <h1>🌈 Aventura de Cubitos</h1>
+          <p>Toca, juega, pinta y construye</p>
         </div>
-
-        <div class="game-area">
-          <div class="sun">☀️</div>
-          <div class="cloud">☁️</div>
-          <div class="helper">🧚‍♂️</div>
-          <div class="grid-world" id="world"></div>
+        <div class="score-card" aria-label="Estrellas conseguidas">
+          ⭐ <span id="score">0</span>
         </div>
+      </div>
 
-        <div class="memory-game">
-          <div class="memory-header">
-            <h2>🐾 Mini juego fácil: toca dos iguales</h2>
-            <button class="small-btn" onclick="resetMemoryGame()">🔄 Nueva partida</button>
+      <div class="world" id="worldLayer">
+        <div class="sun" data-say="¡Sol brillante!" aria-label="Sol"></div>
+        <div class="cloud one" data-say="¡Nube blandita!" aria-label="Nube"></div>
+        <div class="cloud two" data-say="¡Otra nube!" aria-label="Nube"></div>
+
+        <div class="house" id="house" aria-label="Casa">
+          <div class="house-roof"></div>
+          <div class="house-body">
+            <div class="window left"></div>
+            <div class="window right"></div>
+            <div class="door" id="door"></div>
           </div>
-          <div class="memory-grid" id="memoryGrid"></div>
-        </div>
-      </section>
-
-      <aside class="panel">
-        <h2>🎒 Mochila</h2>
-        <div class="inventory" id="inventory"></div>
-
-        <h2>🛠️ Herramienta</h2>
-        <div class="tools">
-          <button class="tool-btn active" id="buildBtn" onclick="setMode('build')">🧱 Poner</button>
-          <button class="tool-btn" id="breakBtn" onclick="setMode('break')">⛏️ Romper</button>
         </div>
 
-        <div class="builder-card">
-          <div class="builder-title">🏡 Misión principal</div>
-          <div class="builder-step" id="builderStep">Paso 1...</div>
-          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="animal" id="animal" aria-label="Perrito">
+          <div class="animal-body"></div>
+          <div class="animal-head">
+            <div class="ear left"></div>
+            <div class="ear right"></div>
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="nose"></div>
+          </div>
         </div>
 
-        <div class="quiz">
-          <div class="quiz-question" id="quizQuestion">Pregunta...</div>
-          <div class="answers" id="answers"></div>
-          <button class="voice-btn" id="voiceBtn" onclick="listenAnswer()">🎤 Responder hablando</button>
+        <div class="car" id="car" aria-label="Coche">
+          <div class="car-window"></div>
+          <div class="car-body"></div>
+          <div class="wheel left"></div>
+          <div class="wheel right"></div>
         </div>
 
-        <div class="actions">
-          <button class="big-action good" onclick="movePlayer(-1)">⬅️ Izquierda</button>
-          <button class="big-action good" onclick="movePlayer(1)">➡️ Derecha</button>
-          <button class="big-action purple" onclick="magicAnimal()">🐷 Llamar animal</button>
-          <button class="big-action yellow" onclick="autoHelp()">🪄 Ayuda mágica</button>
-          <button class="big-action" onclick="openChest()">🎁 Abrir cofre</button>
-          <button class="big-action danger" onclick="resetWorld()">🔄 Mundo nuevo</button>
+        <div class="tree" id="tree" aria-label="Árbol">
+          <div class="tree-trunk"></div>
+          <div class="tree-top">
+            <div class="apple a1"></div>
+            <div class="apple a2"></div>
+            <div class="apple a3"></div>
+          </div>
         </div>
 
-        <div class="guide">
-          <strong>Modo peque:</strong><br>
-          Las casillas con 👇 son las importantes. Si Tomás se equivoca, el juego le ayuda y no castiga.
+        <div class="flower-bed">
+          <div class="flower f1" data-say="¡Flor rosa!"><div class="stem"></div><div class="petal p1"></div><div class="petal p2"></div><div class="petal p3"></div><div class="petal p4"></div><div class="center"></div></div>
+          <div class="flower f2" data-say="¡Qué bonita!"><div class="stem"></div><div class="petal p1"></div><div class="petal p2"></div><div class="petal p3"></div><div class="petal p4"></div><div class="center"></div></div>
+          <div class="flower f3" data-say="¡Huele bien!"><div class="stem"></div><div class="petal p1"></div><div class="petal p2"></div><div class="petal p3"></div><div class="petal p4"></div><div class="center"></div></div>
+          <div class="flower f4" data-say="¡Otra flor!"><div class="stem"></div><div class="petal p1"></div><div class="petal p2"></div><div class="petal p3"></div><div class="petal p4"></div><div class="center"></div></div>
         </div>
-      </aside>
-    </div>
-  </div>
+      </div>
+
+      <div class="play-layer" id="blocksLayer">
+        <div class="activity-card">
+          <h2 class="activity-title">🧱 Construye con cubitos</h2>
+          <div class="blocks-zone">
+            <div class="build-area" id="buildArea">
+              <div class="ground-line"></div>
+            </div>
+            <div class="palette">
+              <button class="block-btn" style="background:#ff6b6b" data-color="#ff6b6b">Rojo</button>
+              <button class="block-btn" style="background:#ffd95a" data-color="#ffd95a">Amarillo</button>
+              <button class="block-btn" style="background:#62d45f" data-color="#62d45f">Verde</button>
+              <button class="block-btn" style="background:#5ec8ff" data-color="#5ec8ff">Azul</button>
+              <button class="big-action" id="towerBtn" style="background:#8e7dff;color:white">🏰 Torre</button>
+              <button class="big-action" id="clearBlocksBtn" style="background:#26364d;color:white">🧹 Limpiar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="play-layer" id="colorsLayer">
+        <div class="activity-card">
+          <h2 class="activity-title">🎨 Pinta las formas</h2>
+          <div class="color-zone">
+            <div class="paint-board">
+              <div class="paint-shape circle" data-shape="circle"><span>😊</span></div>
+              <div class="paint-shape square" data-shape="square"><span>⭐</span></div>
+              <div class="paint-shape triangle" data-shape="triangle"><span>🚗</span></div>
+            </div>
+            <div class="palette">
+              <button class="color-btn selected" style="background:#ff6b6b" data-paint="#ff6b6b"></button>
+              <button class="color-btn" style="background:#ffd95a" data-paint="#ffd95a"></button>
+              <button class="color-btn" style="background:#62d45f" data-paint="#62d45f"></button>
+              <button class="color-btn" style="background:#5ec8ff" data-paint="#5ec8ff"></button>
+              <button class="color-btn" style="background:#8e7dff" data-paint="#8e7dff"></button>
+              <button class="color-btn" style="background:#ff8bd1" data-paint="#ff8bd1"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="play-layer" id="countLayer">
+        <div class="activity-card">
+          <h2 class="activity-title" id="countTitle">🔢 ¿Cuántos hay?</h2>
+          <div class="count-zone">
+            <div class="count-board" id="countBoard"></div>
+            <div class="number-choices" id="numberChoices"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast">¡Muy bien!</div>
+      <div class="celebration" id="celebration"></div>
+    </section>
+
+    <aside class="side-menu" aria-label="Menú de juegos">
+      <div class="menu-header">
+        <h2>Menú</h2>
+        <p>Todo a mano para tablet</p>
+      </div>
+
+      <div class="menu-buttons">
+        <button class="menu-button active" data-mode="world">
+          <span class="icon">🏡</span>
+          Mundo
+        </button>
+        <button class="menu-button" data-mode="blocks">
+          <span class="icon">🧱</span>
+          Cubitos
+        </button>
+        <button class="menu-button" data-mode="colors">
+          <span class="icon">🎨</span>
+          Colores
+        </button>
+        <button class="menu-button" data-mode="count">
+          <span class="icon">🔢</span>
+          Contar
+        </button>
+        <button class="menu-button" id="partyBtn">
+          <span class="icon">🎉</span>
+          Fiesta
+        </button>
+        <button class="menu-button" id="soundBtn">
+          <span class="icon">🔊</span>
+          Sonido
+        </button>
+      </div>
+
+      <div class="message-box" id="messageBox">
+        Toca la casa, el coche, el perrito, el árbol o las flores.
+      </div>
+
+      <div class="controls-row">
+        <button class="small-btn" id="resetBtn">Reiniciar</button>
+        <button class="small-btn" id="fullscreenBtn">Pantalla</button>
+      </div>
+    </aside>
+  </main>
 
   <script>
-    const COLS_DESKTOP = 16, COLS_MOBILE = 12, ROWS = 10;
-    const blockTypes = {
-      grass: { name: 'Hierba', emoji: '🌱', class: 'grass' }, dirt: { name: 'Tierra', emoji: '🟫', class: 'dirt' }, stone: { name: 'Piedra', emoji: '⬜', class: 'stone' }, wood: { name: 'Madera', emoji: '🪵', class: 'wood' }, leaf: { name: 'Hojas', emoji: '🍃', class: 'leaf' }, water: { name: 'Agua', emoji: '💧', class: 'water' }, flower: { name: 'Flor', emoji: '🌸', class: 'flower' }, torch: { name: 'Antorcha', emoji: '🔥', class: 'torch' }, bed: { name: 'Cama', emoji: '🛏️', class: 'bed' }, chest: { name: 'Cofre', emoji: '🎁', class: 'chest' }, door: { name: 'Puerta', emoji: '🚪', class: 'door' }, window: { name: 'Ventana', emoji: '🪟', class: 'window' }, diamond: { name: 'Diamante', emoji: '💎', class: 'diamond' }, gold: { name: 'Oro', emoji: '🟨', class: 'gold' }
-    };
+    const scoreEl = document.getElementById('score');
+    const messageBox = document.getElementById('messageBox');
+    const toast = document.getElementById('toast');
+    const celebration = document.getElementById('celebration');
+    const worldLayer = document.getElementById('worldLayer');
+    const blocksLayer = document.getElementById('blocksLayer');
+    const colorsLayer = document.getElementById('colorsLayer');
+    const countLayer = document.getElementById('countLayer');
+    const buildArea = document.getElementById('buildArea');
+    const countBoard = document.getElementById('countBoard');
+    const numberChoices = document.getElementById('numberChoices');
 
-    const inventoryBlocks = ['wood','door','window','bed','chest','flower','water','torch','leaf','stone'];
-    const mobs = ['🐷','🐮','🐑','🐔','🐸','🐶'];
+    let score = 0;
+    let soundEnabled = true;
+    let currentPaint = '#ff6b6b';
+    let blockIndex = 0;
+    let correctCount = 3;
 
-    const quizList = [
-      { q: '¿Qué ponemos para hacer paredes?', options: ['🪵 Madera', '💧 Agua', '🌸 Flor', '🐷 Cerdito'], answer: 'madera', say: 'madera' },
-      { q: '¿Por dónde entra Tomás a casa?', options: ['🚪 Puerta', '🐮 Vaca', '💧 Agua', '🍃 Hojas'], answer: 'puerta', say: 'puerta' },
-      { q: '¿Dónde duerme el personaje?', options: ['🛏️ Cama', '🎁 Cofre', '💧 Agua', '🌸 Flor'], answer: 'cama', say: 'cama' },
-      { q: '¿Qué bloque da luz?', options: ['🔥 Antorcha', '🟫 Tierra', '🌱 Hierba', '🐑 Oveja'], answer: 'antorcha', say: 'antorcha' },
-      { q: '¿Qué animal hace oink oink?', options: ['🐷 Cerdito', '🐮 Vaca', '🐔 Gallina', '🐸 Rana'], answer: 'cerdito', say: 'cerdito' }
+    const messages = [
+      '¡Muy bien!',
+      '¡Genial!',
+      '¡Otra vez!',
+      '¡Qué divertido!',
+      '¡Bravo!',
+      '¡Lo has hecho genial!'
     ];
 
-    let cols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP;
-    let world = [], selected = 'wood', mode = 'build';
-    let player = { x: 2, y: 5 }, animal = { x: 8, y: 5, emoji: '🐷' };
-    let stars = 0, gems = 0, level = 1, quizIndex = 0;
-    let lastMessage = 'Hola Tomás. Vamos a construir una casita paso a paso.';
-    let speaking = false;
+    function setMessage(text) {
+      messageBox.textContent = text;
+    }
 
-    let blueprintIndex = 0;
-    let blueprintCells = [];
+    function addScore(points = 1) {
+      score += points;
+      scoreEl.textContent = score;
+    }
 
-    const blueprint = [
-      { text: 'Paso 1: toca las flechas para poner 5 maderas en el suelo de la casa.', type: 'wood', cells: [[5,6],[6,6],[7,6],[8,6],[9,6]] },
-      { text: 'Paso 2: subimos las paredes con madera.', type: 'wood', cells: [[5,5],[5,4],[9,5],[9,4]] },
-      { text: 'Paso 3: cerramos el tejado con hojas verdes.', type: 'leaf', cells: [[6,3],[7,2],[8,3]] },
-      { text: 'Paso 4: ponemos una puerta para entrar.', type: 'door', cells: [[7,5]] },
-      { text: 'Paso 5: ponemos dos ventanas bonitas.', type: 'window', cells: [[6,5],[8,5]] },
-      { text: 'Paso 6: dentro ponemos cama y cofre.', type: 'bed', cells: [[6,4]] },
-      { text: 'Paso 7: ahora toca el cofre del tesoro.', type: 'chest', cells: [[8,4]] },
-      { text: 'Paso 8: decoramos con flores.', type: 'flower', cells: [[4,6],[10,6],[3,6],[11,6]] },
-      { text: 'Paso 9: ponemos agua para el jardín.', type: 'water', cells: [[4,7],[10,7]] },
-      { text: 'Paso 10: ponemos antorchas y la casa está lista.', type: 'torch', cells: [[5,3],[9,3]] }
-    ];
+    function randomMessage() {
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
 
-    function initWorld() {
-      world = [];
-      for (let y = 0; y < ROWS; y++) {
-        const row = [];
-        for (let x = 0; x < cols; x++) row.push(y >= 7 ? 'dirt' : y === 6 ? 'grass' : null);
-        world.push(row);
+    function showToast(text = randomMessage()) {
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 1100);
+    }
+
+    function beep(freq = 440, duration = 0.12, type = 'sine') {
+      if (!soundEnabled) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration + 0.03);
+    }
+
+    function happySound() {
+      beep(523, 0.09);
+      setTimeout(() => beep(659, 0.09), 95);
+      setTimeout(() => beep(784, 0.12), 190);
+    }
+
+    function animateOnce(el, className) {
+      el.classList.remove(className);
+      void el.offsetWidth;
+      el.classList.add(className);
+      setTimeout(() => el.classList.remove(className), 600);
+    }
+
+    function starBurst(amount = 9) {
+      const rect = celebration.getBoundingClientRect();
+      for (let i = 0; i < amount; i++) {
+        const star = document.createElement('div');
+        star.className = 'star-pop';
+        star.textContent = ['⭐','🌟','✨','💫'][Math.floor(Math.random() * 4)];
+        star.style.left = Math.random() * rect.width + 'px';
+        star.style.top = (rect.height * 0.55 + Math.random() * rect.height * 0.35) + 'px';
+        star.style.animationDelay = Math.random() * 0.18 + 's';
+        celebration.appendChild(star);
+        setTimeout(() => star.remove(), 1200);
       }
-      world[5][2] = 'stone'; world[5][3] = 'stone'; world[4][3] = 'stone';
-      player = { x: 2, y: 5 };
-      animal = { x: Math.min(12, cols - 2), y: 5, emoji: '🐷' };
-      blueprintIndex = 0;
-      updateBlueprintCells();
     }
 
-    function updateBlueprintCells() {
-      const current = blueprint[blueprintIndex];
-      blueprintCells = current ? current.cells.map(([x,y]) => ({ x, y, type: current.type })) : [];
+    function reward(text = randomMessage()) {
+      addScore(1);
+      showToast(text);
+      happySound();
+      starBurst(5);
     }
 
-    function renderInventory() {
-      const inv = document.getElementById('inventory'); inv.innerHTML = '';
-      inventoryBlocks.forEach(key => {
-        const b = blockTypes[key]; const btn = document.createElement('button');
-        btn.className = 'inv-btn' + (selected === key ? ' active' : '');
-        btn.innerHTML = `${b.emoji}<span>${b.name}</span>`;
-        btn.onclick = () => { selected = key; renderInventory(); setMessage(`Has elegido ${b.name}`); };
-        inv.appendChild(btn);
+    function setMode(mode) {
+      document.querySelectorAll('.menu-button[data-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      worldLayer.classList.toggle('hidden', mode !== 'world');
+      blocksLayer.classList.toggle('active', mode === 'blocks');
+      colorsLayer.classList.toggle('active', mode === 'colors');
+      countLayer.classList.toggle('active', mode === 'count');
+
+      if (mode === 'world') setMessage('Toca la casa, el coche, el perrito, el árbol o las flores.');
+      if (mode === 'blocks') setMessage('Elige cubitos y muévelos con el dedo.');
+      if (mode === 'colors') setMessage('Elige un color y toca una forma para pintarla.');
+      if (mode === 'count') {
+        setMessage('Cuenta los juguetes y toca el número correcto.');
+        newCountRound();
+      }
+    }
+
+    document.querySelectorAll('.menu-button[data-mode]').forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+
+    document.getElementById('house').addEventListener('click', () => {
+      const door = document.getElementById('door');
+      door.classList.toggle('open');
+      setMessage(door.classList.contains('open') ? '¡La puerta está abierta!' : '¡La puerta está cerrada!');
+      reward('¡Hola casa!');
+    });
+
+    document.getElementById('animal').addEventListener('click', (e) => {
+      animateOnce(e.currentTarget, 'bounce');
+      setMessage('¡Guau guau! El perrito salta.');
+      beep(330, 0.08, 'square');
+      setTimeout(() => beep(260, 0.08, 'square'), 110);
+      addScore(1);
+      showToast('¡Guau!');
+      starBurst(4);
+    });
+
+    document.getElementById('car').addEventListener('click', (e) => {
+      const car = e.currentTarget;
+      car.style.transform = car.style.transform ? '' : 'translateX(80px)';
+      setMessage('¡Brrrum! El coche se mueve.');
+      beep(180, 0.14, 'sawtooth');
+      reward('¡Brrrum!');
+    });
+
+    document.getElementById('tree').addEventListener('click', (e) => {
+      animateOnce(e.currentTarget, 'wiggle');
+      setMessage('¡Han caído manzanas mágicas!');
+      reward('¡Árbol mágico!');
+    });
+
+    document.querySelectorAll('[data-say]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        animateOnce(el, 'bounce');
+        setMessage(el.dataset.say);
+        reward(el.dataset.say);
+      });
+    });
+
+    function createBlock(color, x, y) {
+      const block = document.createElement('div');
+      block.className = 'placed-block';
+      block.style.background = color;
+      block.style.left = x + 'px';
+      block.style.top = y + 'px';
+      block.style.zIndex = 50 + blockIndex++;
+      buildArea.appendChild(block);
+      makeDraggable(block);
+      reward('¡Cubito!');
+    }
+
+    document.querySelectorAll('.block-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rect = buildArea.getBoundingClientRect();
+        createBlock(btn.dataset.color, rect.width / 2 - 46 + Math.random() * 40 - 20, rect.height - 125 - Math.random() * 130);
+        setMessage('Puedes mover el cubito con el dedo.');
+      });
+    });
+
+    document.getElementById('towerBtn').addEventListener('click', () => {
+      buildArea.querySelectorAll('.placed-block').forEach(b => b.remove());
+      const colors = ['#ff6b6b', '#ffd95a', '#62d45f', '#5ec8ff', '#8e7dff'];
+      const rect = buildArea.getBoundingClientRect();
+      colors.forEach((color, i) => {
+        createBlock(color, rect.width / 2 - 46, rect.height - 115 - i * 60);
+      });
+      setMessage('¡Has construido una torre!');
+      starBurst(12);
+    });
+
+    document.getElementById('clearBlocksBtn').addEventListener('click', () => {
+      buildArea.querySelectorAll('.placed-block').forEach(b => b.remove());
+      setMessage('Zona limpia para construir otra vez.');
+      beep(300, 0.12);
+    });
+
+    function makeDraggable(el) {
+      let dragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        el.setPointerCapture(e.pointerId);
+        const r = el.getBoundingClientRect();
+        offsetX = e.clientX - r.left;
+        offsetY = e.clientY - r.top;
+        el.style.zIndex = 100 + blockIndex++;
+        el.style.cursor = 'grabbing';
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const area = buildArea.getBoundingClientRect();
+        let x = e.clientX - area.left - offsetX;
+        let y = e.clientY - area.top - offsetY;
+        x = Math.max(0, Math.min(area.width - el.offsetWidth, x));
+        y = Math.max(0, Math.min(area.height - el.offsetHeight, y));
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      });
+
+      el.addEventListener('pointerup', () => {
+        dragging = false;
+        el.style.cursor = 'grab';
+        beep(420, 0.06);
       });
     }
 
-    function renderWorld() {
-      const el = document.getElementById('world'); el.innerHTML = ''; el.style.gridTemplateColumns = `repeat(${cols}, minmax(24px, 1fr))`;
-      for (let y = 0; y < ROWS; y++) for (let x = 0; x < cols; x++) {
-        const cell = document.createElement('div'); const type = world[y][x];
-        const target = blueprintCells.find(c => c.x === x && c.y === y);
-        cell.className = 'cell ' + (type ? blockTypes[type].class : 'empty');
-        if (target && !type) cell.classList.add('target-cell');
-        if (type) cell.textContent = blockTypes[type].emoji;
-        else if (target) {
-          cell.textContent = blockTypes[target.type].emoji;
-          cell.classList.add(blockTypes[target.type].class, 'ghost');
-        }
-        if (player.x === x && player.y === y) { const p = document.createElement('div'); p.className = 'steve'; p.textContent = '🧒'; cell.appendChild(p); }
-        if (animal.x === x && animal.y === y) { const m = document.createElement('div'); m.className = 'mob'; m.textContent = animal.emoji; cell.appendChild(m); }
-        cell.onclick = (ev) => handleCellClick(x, y, ev);
-        el.appendChild(cell);
-      }
-      updateBuilderPanel();
-    }
-
-    function handleCellClick(x, y, ev) {
-      if (mode === 'break') {
-        if (world[y][x] === null) return setMessage('Eso es aire. Mejor toca un bloque.');
-        const old = world[y][x]; world[y][x] = null; addStars(1);
-        if (old === 'stone' && Math.random() > 0.35) { gems++; sparkle(ev.clientX, ev.clientY, '💎'); setMessage('¡Diamante encontrado!'); }
-        else { sparkle(ev.clientX, ev.clientY, '⛏️'); setMessage(`Has roto ${blockTypes[old].name}.`); }
-        updateHud(); renderWorld(); return;
-      }
-
-      const target = blueprintCells.find(c => c.x === x && c.y === y);
-      if (!target) {
-        if (world[y][x] === null) {
-          world[y][x] = selected;
-          addStars(1);
-          sparkle(ev.clientX, ev.clientY, '✨');
-          setMessage('Construcción libre. ¡También vale!');
-          renderWorld();
-        } else {
-          setMessage('Aquí ya hay un bloque. Busca la flecha amarilla.');
-        }
-        return;
-      }
-
-      if (world[y][x] !== null) return setMessage('Esta pieza ya está puesta. Busca otra flecha.');
-
-      selected = target.type;
-      renderInventory();
-      world[y][x] = target.type;
-      addStars(3);
-      sparkle(ev.clientX, ev.clientY, '⭐');
-      setMessage(`¡Muy bien! Has puesto ${blockTypes[target.type].name}.`);
-      checkBlueprintProgress();
-      renderWorld();
-    }
-
-    function checkBlueprintProgress() {
-      const current = blueprint[blueprintIndex];
-      if (!current) return;
-      const done = current.cells.every(([x,y]) => world[y][x] === current.type);
-      if (done) {
-        addStars(10);
-        level++;
-        sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆');
-        blueprintIndex++;
-        updateBlueprintCells();
-        if (blueprintIndex >= blueprint.length) {
-          setMessage('¡Casita terminada! Tomás tiene una casa preciosa.');
-          magicAnimal(false);
-        } else {
-          setMessage('¡Paso completado! Vamos al siguiente.');
-        }
-        updateHud();
-      }
-    }
-
-    function updateBuilderPanel() {
-      const current = blueprint[blueprintIndex];
-      if (!current) {
-        document.getElementById('builderStep').textContent = '🏆 ¡Casa terminada! Puedes decorar como quieras.';
-        document.getElementById('progressBar').style.width = '100%';
-        return;
-      }
-      const done = current.cells.filter(([x,y]) => world[y][x] === current.type).length;
-      document.getElementById('builderStep').textContent = current.text;
-      document.getElementById('progressBar').style.width = `${Math.round((done / current.cells.length) * 100)}%`;
-    }
-
-    function autoHelp() {
-      const current = blueprint[blueprintIndex];
-      if (!current) return setMessage('La casa ya está lista. Ahora puedes decorar.');
-      const next = current.cells.find(([x,y]) => world[y][x] !== current.type);
-      if (!next) return checkBlueprintProgress();
-      const [x,y] = next;
-      world[y][x] = current.type;
-      selected = current.type;
-      renderInventory();
-      addStars(2);
-      setMessage(`Ayuda mágica: he puesto ${blockTypes[current.type].name}.`);
-      sparkle(window.innerWidth / 2, window.innerHeight / 2, '🪄');
-      checkBlueprintProgress();
-      renderWorld();
-    }
-
-    function renderQuiz() {
-      const quiz = quizList[quizIndex];
-      document.getElementById('quizQuestion').textContent = quiz.q;
-      const answers = document.getElementById('answers'); answers.innerHTML = '';
-      quiz.options.forEach(opt => {
-        const btn = document.createElement('button'); btn.className = 'answer-btn'; btn.textContent = opt;
-        btn.onclick = () => checkAnswer(opt.toLowerCase());
-        answers.appendChild(btn);
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        currentPaint = btn.dataset.paint;
+        setMessage('Color elegido. Ahora toca una forma.');
+        beep(500, 0.08);
       });
-    }
+    });
 
-    function checkAnswer(text) {
-      const quiz = quizList[quizIndex];
-      const normalized = normalizeText(text);
-      if (normalized.includes(normalizeText(quiz.answer)) || normalized.includes(normalizeText(quiz.say))) {
-        addStars(5); sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
-        setMessage('¡Correcto! Muy bien, campeón.');
-        quizIndex = (quizIndex + 1) % quizList.length;
-        renderQuiz();
-      } else setMessage('Casi casi. Prueba otra respuesta.');
-    }
+    document.querySelectorAll('.paint-shape').forEach(shape => {
+      shape.addEventListener('click', () => {
+        if (shape.classList.contains('triangle')) {
+          shape.style.borderBottomColor = currentPaint;
+        } else {
+          shape.style.background = currentPaint;
+        }
+        animateOnce(shape, 'bounce');
+        reward('¡Color bonito!');
+        setMessage('¡Has pintado una forma!');
+      });
+    });
 
-    function listenAnswer() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) return setMessage('Este navegador no permite responder hablando. Puedes tocar una respuesta.');
-      const btn = document.getElementById('voiceBtn');
-      const rec = new SpeechRecognition();
-      rec.lang = 'es-ES'; rec.interimResults = false; rec.maxAlternatives = 1;
-      btn.classList.add('listening'); btn.textContent = '🎧 Te escucho...';
-      setMessage('Te escucho. Di la respuesta en voz alta.');
-      rec.onresult = e => { const said = e.results[0][0].transcript; btn.classList.remove('listening'); btn.textContent = '🎤 Responder hablando'; setMessage(`Has dicho: ${said}`, false); setTimeout(() => checkAnswer(said), 300); };
-      rec.onerror = () => { btn.classList.remove('listening'); btn.textContent = '🎤 Responder hablando'; setMessage('No te he entendido. Toca una respuesta o prueba otra vez.'); };
-      rec.onend = () => { btn.classList.remove('listening'); btn.textContent = '🎤 Responder hablando'; };
-      rec.start();
-    }
+    function newCountRound() {
+      countBoard.innerHTML = '';
+      numberChoices.innerHTML = '';
+      correctCount = Math.floor(Math.random() * 5) + 1;
+      const emojis = ['🚗', '⭐', '🍎', '🧸', '⚽', '🐶'];
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-    function setMode(newMode) { mode = newMode; document.getElementById('buildBtn').classList.toggle('active', mode === 'build'); document.getElementById('breakBtn').classList.toggle('active', mode === 'break'); setMessage(mode === 'build' ? 'Modo construir: toca las flechas amarillas.' : 'Modo romper: toca un bloque con el pico.'); }
-    function movePlayer(dx) { player.x = Math.max(0, Math.min(cols - 1, player.x + dx)); setMessage(dx < 0 ? 'Caminando a la izquierda.' : 'Caminando a la derecha.'); renderWorld(); }
-    function magicAnimal(talk = true) { const spot = { x: Math.floor(Math.random() * cols), y: 5 }; animal = { ...spot, emoji: mobs[Math.floor(Math.random() * mobs.length)] }; addStars(2); if (talk) setMessage(`Ha venido un animalito ${animal.emoji}.`); renderWorld(); }
-    function openChest() { if (countBlock('chest') === 0) return setMessage('Primero coloca un cofre en la casa.'); gems++; addStars(5); setMessage('El cofre tenía un diamante.'); sparkle(window.innerWidth/2, window.innerHeight/2, '💎'); updateHud(); }
-    function countBlock(type) { let c = 0; for (const row of world) for (const cell of row) if (cell === type) c++; return c; }
-    function addStars(n) { stars += n; updateHud(); }
-    function updateHud() { document.getElementById('stars').textContent = stars; document.getElementById('gems').textContent = gems; document.getElementById('level').textContent = level; }
-    function setMessage(text, say = true) { lastMessage = text; document.getElementById('message').textContent = text; if (say) setTimeout(() => speak(text), 120); }
+      for (let i = 0; i < correctCount; i++) {
+        const item = document.createElement('div');
+        item.className = 'count-item';
+        item.textContent = emoji;
+        item.style.animationDelay = (i * 0.08) + 's';
+        countBoard.appendChild(item);
+      }
 
-    function speak(text) {
-      if (!('speechSynthesis' in window) || speaking) return;
-      const u = new SpeechSynthesisUtterance(text); u.lang = 'es-ES'; u.rate = 0.9; u.pitch = 1.1;
-      speaking = true; u.onend = () => speaking = false; u.onerror = () => speaking = false;
-      window.speechSynthesis.speak(u);
-    }
+      const choices = new Set([correctCount]);
+      while (choices.size < 4) {
+        choices.add(Math.floor(Math.random() * 5) + 1);
+      }
 
-    function normalizeText(t) { return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9ñ ]/g, '').trim(); }
-    function sparkle(x, y, emoji) { const s = document.createElement('div'); s.className = 'sparkle'; s.textContent = emoji; s.style.left = `${x}px`; s.style.top = `${y}px`; document.body.appendChild(s); setTimeout(() => s.remove(), 900); }
-
-    function resetWorld() {
-      stars = 0; gems = 0; level = 1; quizIndex = 0; selected = 'wood'; mode = 'build';
-      initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(false); setMode('build');
-      setMessage('Mundo nuevo creado. Toca las flechas para hacer la casita.');
-    }
-
-    let memoryCards = [];
-    let firstMemoryCard = null;
-    let memoryLocked = false;
-
-    function resetMemoryGame(talk = true) {
-      const animalsMemory = ['🐶','🐱','🐷','🐮','🐸','🐔'];
-      memoryCards = [...animalsMemory, ...animalsMemory].sort(() => Math.random() - 0.5).map((emoji, index) => ({ emoji, index, selected: false, matched: false }));
-      firstMemoryCard = null;
-      memoryLocked = false;
-      renderMemoryGame();
-      if (talk) setMessage('Toca dos animales iguales. Están casi visibles para ayudarte.');
-    }
-
-    function renderMemoryGame() {
-      const grid = document.getElementById('memoryGrid'); grid.innerHTML = '';
-      memoryCards.forEach((card, index) => {
+      [...choices].sort(() => Math.random() - 0.5).forEach(num => {
         const btn = document.createElement('button');
-        btn.className = 'memory-card';
-        if (!card.selected && !card.matched) btn.classList.add('soft-hidden');
-        if (card.selected) btn.classList.add('selected-card');
-        if (card.matched) btn.classList.add('matched');
-        btn.innerHTML = `<span>${card.emoji}</span>`;
-        btn.onclick = () => flipMemoryCard(index);
-        grid.appendChild(btn);
+        btn.className = 'num-btn';
+        btn.textContent = num;
+        btn.addEventListener('click', () => {
+          if (num === correctCount) {
+            setMessage('¡Correcto! Has contado muy bien.');
+            reward('¡Correcto!');
+            setTimeout(newCountRound, 900);
+          } else {
+            setMessage('Casi, casi. Prueba otra vez.');
+            showToast('Prueba otra vez');
+            beep(210, 0.12, 'triangle');
+          }
+        });
+        numberChoices.appendChild(btn);
       });
     }
 
-    function flipMemoryCard(index) {
-      if (memoryLocked) return;
-      const card = memoryCards[index];
-      if (card.selected || card.matched) return;
-      card.selected = true;
-      renderMemoryGame();
-      if (firstMemoryCard === null) { firstMemoryCard = index; return; }
-      const first = memoryCards[firstMemoryCard];
-      if (first.emoji === card.emoji) {
-        first.matched = true; card.matched = true; firstMemoryCard = null;
-        addStars(3); setMessage('¡Pareja encontrada!'); sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
-        if (memoryCards.every(c => c.matched)) { addStars(10); setMessage('¡Has encontrado todas las parejas!'); sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆'); }
-        renderMemoryGame();
-      } else {
-        memoryLocked = true;
-        setTimeout(() => { first.selected = false; card.selected = false; firstMemoryCard = null; memoryLocked = false; setMessage('Casi casi. Busca dos iguales.'); renderMemoryGame(); }, 700);
-      }
-    }
+    document.getElementById('partyBtn').addEventListener('click', () => {
+      setMessage('¡Fiesta de estrellas!');
+      showToast('¡Fiesta!');
+      happySound();
+      starBurst(28);
+      addScore(3);
+    });
 
-    window.addEventListener('resize', () => { const newCols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP; if (newCols !== cols) { cols = newCols; resetWorld(); } });
-    initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(false); setMode('build'); setMessage('Mundo nuevo creado. Toca las flechas para hacer la casita.');
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      document.querySelector('#soundBtn .icon').textContent = soundEnabled ? '🔊' : '🔇';
+      setMessage(soundEnabled ? 'Sonido activado.' : 'Sonido desactivado.');
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      score = 0;
+      scoreEl.textContent = score;
+      buildArea.querySelectorAll('.placed-block').forEach(b => b.remove());
+      document.getElementById('door').classList.remove('open');
+      document.getElementById('car').style.transform = '';
+      setMode('world');
+      setMessage('Juego reiniciado. ¡A jugar otra vez!');
+      showToast('Reiniciado');
+    });
+
+    document.getElementById('fullscreenBtn').addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (e) {
+        setMessage('Pantalla completa no disponible aquí.');
+      }
+    });
   </script>
 </body>
 </html>
