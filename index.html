@@ -20,7 +20,7 @@
     .app { max-width: 1180px; margin: auto; padding: 12px; }
 
     header {
-      background: rgba(255,255,255,0.94);
+      background: rgba(255,255,255,0.96);
       border: 5px solid #3b2f2f;
       border-radius: 18px;
       box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.25);
@@ -37,10 +37,10 @@
     .hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-weight: 900; }
     .pill { background: #fff1a8; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; box-shadow: 0 4px 0 #2b211e; font-size: 18px; }
 
-    .layout { display: grid; grid-template-columns: 1fr 340px; gap: 12px; }
-    .panel { background: rgba(255,255,255,0.94); border: 5px solid #3b2f2f; border-radius: 18px; box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.22); padding: 12px; }
+    .layout { display: grid; grid-template-columns: 1fr 340px; gap: 12px; align-items: start; }
+    .panel { background: rgba(255,255,255,0.95); border: 5px solid #3b2f2f; border-radius: 18px; box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.22); padding: 12px; }
     .world-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .message { flex: 1; min-height: 48px; background: #e0f2fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; font-size: 20px; font-weight: 900; display: flex; align-items: center; }
+    .message { flex: 1; min-height: 54px; background: #e0f2fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; font-size: 20px; font-weight: 900; display: flex; align-items: center; }
 
     button { cursor: pointer; border: 4px solid #3b2f2f; border-radius: 14px; background: #fef3c7; box-shadow: 0 5px 0 #2b211e; font-weight: 900; font-family: inherit; transition: transform 0.08s, box-shadow 0.08s, filter 0.08s; }
     button:active { transform: translateY(4px) scale(0.98); box-shadow: 0 1px 0 #2b211e; filter: brightness(0.95); }
@@ -49,11 +49,32 @@
     .game-area { position: relative; background: linear-gradient(#6fd3ff 0%, #9be7ff 58%, #7fd957 58%, #70c948 100%); border: 5px solid #3b2f2f; border-radius: 18px; padding: 10px; overflow: hidden; }
     .sun { position: absolute; top: 18px; right: 26px; width: 58px; height: 58px; background: #fde047; border: 5px solid #3b2f2f; box-shadow: 0 0 0 8px rgba(253,224,71,0.35); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 1; animation: sunMove 8s infinite linear; }
     .cloud { position: absolute; top: 45px; left: 28px; font-size: 48px; z-index: 1; animation: cloudMove 7s infinite ease-in-out; }
+    .helper { position: absolute; left: 90px; top: 32px; z-index: 2; font-size: 44px; animation: helperMove 1.8s infinite ease-in-out; }
 
     .grid-world { position: relative; display: grid; grid-template-columns: repeat(16, minmax(28px, 1fr)); gap: 3px; z-index: 3; margin-top: 86px; }
     .cell { aspect-ratio: 1 / 1; min-height: 32px; border-radius: 5px; border: 2px solid rgba(59,47,47,0.28); background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 3vw, 30px); box-shadow: inset 0 -5px rgba(0,0,0,0.12); position: relative; }
     .empty { background: rgba(255,255,255,0.12); box-shadow: none; border-color: rgba(255,255,255,0.15); }
-    .grass { background: #4ade80; } .dirt { background: #9a5a28; } .stone { background: #9ca3af; } .wood { background: #b7791f; } .leaf { background: #22c55e; } .water { background: #38bdf8; } .flower { background: #f9a8d4; } .gold { background: #facc15; } .diamond { background: #67e8f9; } .chest { background: #d97706; } .bed { background: #f87171; } .torch { background: #fdba74; }
+    .grass { background: #4ade80; } .dirt { background: #9a5a28; } .stone { background: #9ca3af; } .wood { background: #b7791f; } .leaf { background: #22c55e; } .water { background: #38bdf8; } .flower { background: #f9a8d4; } .gold { background: #facc15; } .diamond { background: #67e8f9; } .chest { background: #d97706; } .bed { background: #f87171; } .torch { background: #fdba74; } .door { background: #92400e; } .window { background: #bfdbfe; }
+
+    .target-cell {
+      outline: 4px dashed #fef08a;
+      outline-offset: -5px;
+      animation: targetPulse 1s infinite;
+    }
+
+    .target-cell::after {
+      content: "👇";
+      position: absolute;
+      top: -30px;
+      font-size: 28px;
+      animation: fingerBounce 0.8s infinite;
+      z-index: 10;
+    }
+
+    .ghost {
+      opacity: 0.55;
+      filter: grayscale(0.2);
+    }
 
     .steve, .mob { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 4; }
     .steve { font-size: clamp(28px, 4vw, 38px); animation: wiggle 1.2s infinite ease-in-out; }
@@ -68,6 +89,12 @@
     .tool-btn { padding: 12px 8px; font-size: 18px; }
     .tool-btn.active { background: #bfdbfe; outline: 4px solid #2563eb; }
 
+    .builder-card { background: #dcfce7; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+    .builder-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+    .builder-step { font-size: 18px; font-weight: 900; background: white; border: 3px solid #3b2f2f; border-radius: 14px; padding: 9px; margin-bottom: 8px; }
+    .progress { height: 24px; background: white; border: 4px solid #3b2f2f; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #facc15); width: 0%; transition: width .25s ease; }
+
     .quiz { background: #ede9fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
     .quiz-question { font-size: 19px; font-weight: 900; margin-bottom: 10px; }
     .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -75,14 +102,20 @@
     .voice-btn { width: 100%; padding: 13px; margin-top: 10px; font-size: 18px; background: #dcfce7; }
     .voice-btn.listening { background: #fecaca; animation: pulse 1s infinite; }
 
-    .mission { background: #ecfccb; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; font-size: 18px; font-weight: 900; margin-bottom: 12px; }
-    .progress { height: 24px; background: white; border: 4px solid #3b2f2f; border-radius: 999px; overflow: hidden; margin-top: 8px; }
-    .progress-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #facc15); width: 0%; transition: width .25s ease; }
     .actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
     .big-action { padding: 13px; font-size: 18px; background: #dbeafe; }
-    .danger { background: #fee2e2; } .good { background: #dcfce7; } .purple { background: #ede9fe; }
+    .danger { background: #fee2e2; } .good { background: #dcfce7; } .purple { background: #ede9fe; } .yellow { background: #fef9c3; }
     .guide { margin-top: 12px; font-size: 15px; line-height: 1.35; font-weight: 700; color: #374151; background: #fff7ed; border: 4px solid #3b2f2f; border-radius: 16px; padding: 10px; }
     .sparkle { position: fixed; pointer-events: none; z-index: 999; font-size: 52px; animation: sparkle 900ms forwards ease-out; }
+
+    .memory-game { margin-top: 14px; background: #fff7ed; border: 5px solid #3b2f2f; border-radius: 18px; padding: 12px; }
+    .memory-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .memory-card { min-height: 78px; font-size: 38px; background: #fde68a; position: relative; }
+    .memory-card.soft-hidden { background: #fff7ed; opacity: .85; }
+    .memory-card.soft-hidden span { opacity: .42; }
+    .memory-card.selected-card { outline: 5px solid #60a5fa; background: #dbeafe; }
+    .memory-card.matched { background: #bbf7d0; }
 
     @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
     @keyframes sparkle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1.6); opacity: 0; } }
@@ -90,46 +123,10 @@
     @keyframes hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
     @keyframes sunMove { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes cloudMove { 0%,100% { transform: translateX(0); } 50% { transform: translateX(45px); } }
+    @keyframes helperMove { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes targetPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    @keyframes fingerBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-
-    .memory-game {
-      margin-top: 14px;
-      background: #fff7ed;
-      border: 5px solid #3b2f2f;
-      border-radius: 18px;
-      padding: 12px;
-    }
-
-    .memory-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .memory-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .memory-card {
-      min-height: 78px;
-      font-size: 38px;
-      background: #fde68a;
-    }
-
-    .memory-card.hidden-card {
-      background: #334155;
-      color: transparent;
-    }
-
-    .memory-card.matched {
-      background: #bbf7d0;
-    }
-    
     @media (max-width: 900px) {
       header { grid-template-columns: 1fr; text-align: center; }
       .hud { justify-content: center; }
@@ -137,6 +134,7 @@
       .grid-world { grid-template-columns: repeat(12, minmax(24px, 1fr)); }
       .inventory { grid-template-columns: repeat(5, 1fr); }
       .inv-btn { min-height: 68px; }
+      .memory-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -145,7 +143,7 @@
     <header>
       <div>
         <h1>⛏️ Aventura de Cubitos</h1>
-        <div class="subtitle">Construye, rompe bloques, responde tocando o hablando y ayuda a los animales</div>
+        <div class="subtitle">Construye la casita de Tomás, cuida animales y gana estrellas</div>
       </div>
       <div class="hud">
         <div class="pill">⭐ <span id="stars">0</span></div>
@@ -157,17 +155,20 @@
     <div class="layout">
       <section class="panel">
         <div class="world-top">
-          <div class="message" id="message">Hola peque. Toca bloques para construir tu mundo.</div>
+          <div class="message" id="message">Hola Tomás. Vamos a construir una casita paso a paso.</div>
           <button class="small-btn" onclick="speak(lastMessage)">🔊 Repetir</button>
         </div>
+
         <div class="game-area">
           <div class="sun">☀️</div>
           <div class="cloud">☁️</div>
+          <div class="helper">🧚‍♂️</div>
           <div class="grid-world" id="world"></div>
         </div>
+
         <div class="memory-game">
           <div class="memory-header">
-            <h2>🐾 Mini juego para Tomás: parejas de animales</h2>
+            <h2>🐾 Mini juego fácil: toca dos iguales</h2>
             <button class="small-btn" onclick="resetMemoryGame()">🔄 Nueva partida</button>
           </div>
           <div class="memory-grid" id="memoryGrid"></div>
@@ -184,28 +185,30 @@
           <button class="tool-btn" id="breakBtn" onclick="setMode('break')">⛏️ Romper</button>
         </div>
 
+        <div class="builder-card">
+          <div class="builder-title">🏡 Misión principal</div>
+          <div class="builder-step" id="builderStep">Paso 1...</div>
+          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+
         <div class="quiz">
           <div class="quiz-question" id="quizQuestion">Pregunta...</div>
           <div class="answers" id="answers"></div>
           <button class="voice-btn" id="voiceBtn" onclick="listenAnswer()">🎤 Responder hablando</button>
         </div>
 
-        <div class="mission">
-          <div id="missionText">Misión: construye una casita con 6 bloques de madera.</div>
-          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-        </div>
-
         <div class="actions">
-          <button class="big-action good" onclick="movePlayer(-1,0)">⬅️ Izquierda</button>
-          <button class="big-action good" onclick="movePlayer(1,0)">➡️ Derecha</button>
+          <button class="big-action good" onclick="movePlayer(-1)">⬅️ Izquierda</button>
+          <button class="big-action good" onclick="movePlayer(1)">➡️ Derecha</button>
           <button class="big-action purple" onclick="magicAnimal()">🐷 Llamar animal</button>
+          <button class="big-action yellow" onclick="autoHelp()">🪄 Ayuda mágica</button>
           <button class="big-action" onclick="openChest()">🎁 Abrir cofre</button>
           <button class="big-action danger" onclick="resetWorld()">🔄 Mundo nuevo</button>
         </div>
 
         <div class="guide">
           <strong>Modo peque:</strong><br>
-          Nada de escribir. Puede tocar una respuesta o pulsar el micro y decirla en voz alta.
+          Las casillas con 👇 son las importantes. Si Tomás se equivoca, el juego le ayuda y no castiga.
         </div>
       </aside>
     </div>
@@ -214,34 +217,41 @@
   <script>
     const COLS_DESKTOP = 16, COLS_MOBILE = 12, ROWS = 10;
     const blockTypes = {
-      grass: { name: 'Hierba', emoji: '🌱', class: 'grass' }, dirt: { name: 'Tierra', emoji: '🟫', class: 'dirt' }, stone: { name: 'Piedra', emoji: '⬜', class: 'stone' }, wood: { name: 'Madera', emoji: '🪵', class: 'wood' }, leaf: { name: 'Hojas', emoji: '🍃', class: 'leaf' }, water: { name: 'Agua', emoji: '💧', class: 'water' }, flower: { name: 'Flor', emoji: '🌸', class: 'flower' }, torch: { name: 'Antorcha', emoji: '🔥', class: 'torch' }, bed: { name: 'Cama', emoji: '🛏️', class: 'bed' }, chest: { name: 'Cofre', emoji: '🎁', class: 'chest' }, diamond: { name: 'Diamante', emoji: '💎', class: 'diamond' }, gold: { name: 'Oro', emoji: '🟨', class: 'gold' }
+      grass: { name: 'Hierba', emoji: '🌱', class: 'grass' }, dirt: { name: 'Tierra', emoji: '🟫', class: 'dirt' }, stone: { name: 'Piedra', emoji: '⬜', class: 'stone' }, wood: { name: 'Madera', emoji: '🪵', class: 'wood' }, leaf: { name: 'Hojas', emoji: '🍃', class: 'leaf' }, water: { name: 'Agua', emoji: '💧', class: 'water' }, flower: { name: 'Flor', emoji: '🌸', class: 'flower' }, torch: { name: 'Antorcha', emoji: '🔥', class: 'torch' }, bed: { name: 'Cama', emoji: '🛏️', class: 'bed' }, chest: { name: 'Cofre', emoji: '🎁', class: 'chest' }, door: { name: 'Puerta', emoji: '🚪', class: 'door' }, window: { name: 'Ventana', emoji: '🪟', class: 'window' }, diamond: { name: 'Diamante', emoji: '💎', class: 'diamond' }, gold: { name: 'Oro', emoji: '🟨', class: 'gold' }
     };
-    const inventoryBlocks = ['grass','dirt','stone','wood','leaf','water','flower','torch','bed','chest'];
+
+    const inventoryBlocks = ['wood','door','window','bed','chest','flower','water','torch','leaf','stone'];
     const mobs = ['🐷','🐮','🐑','🐔','🐸','🐶'];
 
     const quizList = [
-      { q: '¿Qué bloque sirve para hacer una casa?', options: ['🪵 Madera', '💧 Agua', '🌸 Flor', '🐷 Cerdito'], answer: 'madera', say: 'madera' },
-      { q: '¿Cuál es el animal que hace oink oink?', options: ['🐷 Cerdito', '🐮 Vaca', '🐔 Gallina', '🐸 Rana'], answer: 'cerdito', say: 'cerdito' },
-      { q: '¿Qué bloque parece agua?', options: ['💧 Agua', '🔥 Antorcha', '🪵 Madera', '🛏️ Cama'], answer: 'agua', say: 'agua' },
-      { q: '¿Qué encontramos al romper piedra a veces?', options: ['💎 Diamante', '🌸 Flor', '🛏️ Cama', '🐮 Vaca'], answer: 'diamante', say: 'diamante' },
-      { q: '¿Dónde duerme el personaje?', options: ['🛏️ Cama', '🎁 Cofre', '💧 Agua', '🍃 Hojas'], answer: 'cama', say: 'cama' },
+      { q: '¿Qué ponemos para hacer paredes?', options: ['🪵 Madera', '💧 Agua', '🌸 Flor', '🐷 Cerdito'], answer: 'madera', say: 'madera' },
+      { q: '¿Por dónde entra Tomás a casa?', options: ['🚪 Puerta', '🐮 Vaca', '💧 Agua', '🍃 Hojas'], answer: 'puerta', say: 'puerta' },
+      { q: '¿Dónde duerme el personaje?', options: ['🛏️ Cama', '🎁 Cofre', '💧 Agua', '🌸 Flor'], answer: 'cama', say: 'cama' },
       { q: '¿Qué bloque da luz?', options: ['🔥 Antorcha', '🟫 Tierra', '🌱 Hierba', '🐑 Oveja'], answer: 'antorcha', say: 'antorcha' },
-      { q: '¿Cuántas flores hay que plantar en la misión?', options: ['4', '1', '8', '10'], answer: '4', say: 'cuatro' }
+      { q: '¿Qué animal hace oink oink?', options: ['🐷 Cerdito', '🐮 Vaca', '🐔 Gallina', '🐸 Rana'], answer: 'cerdito', say: 'cerdito' }
     ];
 
     let cols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP;
     let world = [], selected = 'wood', mode = 'build';
     let player = { x: 2, y: 5 }, animal = { x: 8, y: 5, emoji: '🐷' };
-    let stars = 0, gems = 0, level = 1, missionIndex = 0, quizIndex = 0;
-    let lastMessage = 'Hola peque. Toca bloques para construir tu mundo.';
+    let stars = 0, gems = 0, level = 1, quizIndex = 0;
+    let lastMessage = 'Hola Tomás. Vamos a construir una casita paso a paso.';
     let speaking = false;
 
-    const missions = [
-      { text: 'Misión: construye una casita con 6 bloques de madera.', check: () => countBlock('wood') >= 6, goal: 6, current: () => Math.min(countBlock('wood'), 6) },
-      { text: 'Misión: planta 4 flores para los animales.', check: () => countBlock('flower') >= 4, goal: 4, current: () => Math.min(countBlock('flower'), 4) },
-      { text: 'Misión: pon una cama y un cofre en tu casita.', check: () => countBlock('bed') >= 1 && countBlock('chest') >= 1, goal: 2, current: () => Math.min(countBlock('bed') + countBlock('chest'), 2) },
-      { text: 'Misión: encuentra 2 diamantes rompiendo piedra.', check: () => gems >= 2, goal: 2, current: () => Math.min(gems, 2) },
-      { text: 'Misión final: crea un jardín con agua, flores y hojas.', check: () => countBlock('water') >= 2 && countBlock('flower') >= 4 && countBlock('leaf') >= 3, goal: 9, current: () => Math.min(countBlock('water') + countBlock('flower') + countBlock('leaf'), 9) }
+    let blueprintIndex = 0;
+    let blueprintCells = [];
+
+    const blueprint = [
+      { text: 'Paso 1: toca las flechas para poner 5 maderas en el suelo de la casa.', type: 'wood', cells: [[5,6],[6,6],[7,6],[8,6],[9,6]] },
+      { text: 'Paso 2: subimos las paredes con madera.', type: 'wood', cells: [[5,5],[5,4],[9,5],[9,4]] },
+      { text: 'Paso 3: cerramos el tejado con hojas verdes.', type: 'leaf', cells: [[6,3],[7,2],[8,3]] },
+      { text: 'Paso 4: ponemos una puerta para entrar.', type: 'door', cells: [[7,5]] },
+      { text: 'Paso 5: ponemos dos ventanas bonitas.', type: 'window', cells: [[6,5],[8,5]] },
+      { text: 'Paso 6: dentro ponemos cama y cofre.', type: 'bed', cells: [[6,4]] },
+      { text: 'Paso 7: ahora toca el cofre del tesoro.', type: 'chest', cells: [[8,4]] },
+      { text: 'Paso 8: decoramos con flores.', type: 'flower', cells: [[4,6],[10,6],[3,6],[11,6]] },
+      { text: 'Paso 9: ponemos agua para el jardín.', type: 'water', cells: [[4,7],[10,7]] },
+      { text: 'Paso 10: ponemos antorchas y la casa está lista.', type: 'torch', cells: [[5,3],[9,3]] }
     ];
 
     function initWorld() {
@@ -251,9 +261,16 @@
         for (let x = 0; x < cols; x++) row.push(y >= 7 ? 'dirt' : y === 6 ? 'grass' : null);
         world.push(row);
       }
-      world[5][5] = 'stone'; world[5][6] = 'stone'; world[5][7] = 'stone'; world[4][6] = 'stone';
-      if (cols > 8) { world[5][cols-4] = 'wood'; world[4][cols-4] = 'wood'; world[3][cols-4] = 'leaf'; world[3][cols-5] = 'leaf'; world[3][cols-3] = 'leaf'; world[2][cols-4] = 'leaf'; }
-      player = { x: 2, y: 5 }; animal = { x: Math.min(8, cols - 2), y: 5, emoji: '🐷' };
+      world[5][2] = 'stone'; world[5][3] = 'stone'; world[4][3] = 'stone';
+      player = { x: 2, y: 5 };
+      animal = { x: Math.min(12, cols - 2), y: 5, emoji: '🐷' };
+      blueprintIndex = 0;
+      updateBlueprintCells();
+    }
+
+    function updateBlueprintCells() {
+      const current = blueprint[blueprintIndex];
+      blueprintCells = current ? current.cells.map(([x,y]) => ({ x, y, type: current.type })) : [];
     }
 
     function renderInventory() {
@@ -271,14 +288,103 @@
       const el = document.getElementById('world'); el.innerHTML = ''; el.style.gridTemplateColumns = `repeat(${cols}, minmax(24px, 1fr))`;
       for (let y = 0; y < ROWS; y++) for (let x = 0; x < cols; x++) {
         const cell = document.createElement('div'); const type = world[y][x];
+        const target = blueprintCells.find(c => c.x === x && c.y === y);
         cell.className = 'cell ' + (type ? blockTypes[type].class : 'empty');
+        if (target && !type) cell.classList.add('target-cell');
         if (type) cell.textContent = blockTypes[type].emoji;
+        else if (target) {
+          cell.textContent = blockTypes[target.type].emoji;
+          cell.classList.add(blockTypes[target.type].class, 'ghost');
+        }
         if (player.x === x && player.y === y) { const p = document.createElement('div'); p.className = 'steve'; p.textContent = '🧒'; cell.appendChild(p); }
         if (animal.x === x && animal.y === y) { const m = document.createElement('div'); m.className = 'mob'; m.textContent = animal.emoji; cell.appendChild(m); }
         cell.onclick = (ev) => handleCellClick(x, y, ev);
         el.appendChild(cell);
       }
-      updateMission();
+      updateBuilderPanel();
+    }
+
+    function handleCellClick(x, y, ev) {
+      if (mode === 'break') {
+        if (world[y][x] === null) return setMessage('Eso es aire. Mejor toca un bloque.');
+        const old = world[y][x]; world[y][x] = null; addStars(1);
+        if (old === 'stone' && Math.random() > 0.35) { gems++; sparkle(ev.clientX, ev.clientY, '💎'); setMessage('¡Diamante encontrado!'); }
+        else { sparkle(ev.clientX, ev.clientY, '⛏️'); setMessage(`Has roto ${blockTypes[old].name}.`); }
+        updateHud(); renderWorld(); return;
+      }
+
+      const target = blueprintCells.find(c => c.x === x && c.y === y);
+      if (!target) {
+        if (world[y][x] === null) {
+          world[y][x] = selected;
+          addStars(1);
+          sparkle(ev.clientX, ev.clientY, '✨');
+          setMessage('Construcción libre. ¡También vale!');
+          renderWorld();
+        } else {
+          setMessage('Aquí ya hay un bloque. Busca la flecha amarilla.');
+        }
+        return;
+      }
+
+      if (world[y][x] !== null) return setMessage('Esta pieza ya está puesta. Busca otra flecha.');
+
+      selected = target.type;
+      renderInventory();
+      world[y][x] = target.type;
+      addStars(3);
+      sparkle(ev.clientX, ev.clientY, '⭐');
+      setMessage(`¡Muy bien! Has puesto ${blockTypes[target.type].name}.`);
+      checkBlueprintProgress();
+      renderWorld();
+    }
+
+    function checkBlueprintProgress() {
+      const current = blueprint[blueprintIndex];
+      if (!current) return;
+      const done = current.cells.every(([x,y]) => world[y][x] === current.type);
+      if (done) {
+        addStars(10);
+        level++;
+        sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆');
+        blueprintIndex++;
+        updateBlueprintCells();
+        if (blueprintIndex >= blueprint.length) {
+          setMessage('¡Casita terminada! Tomás tiene una casa preciosa.');
+          magicAnimal(false);
+        } else {
+          setMessage('¡Paso completado! Vamos al siguiente.');
+        }
+        updateHud();
+      }
+    }
+
+    function updateBuilderPanel() {
+      const current = blueprint[blueprintIndex];
+      if (!current) {
+        document.getElementById('builderStep').textContent = '🏆 ¡Casa terminada! Puedes decorar como quieras.';
+        document.getElementById('progressBar').style.width = '100%';
+        return;
+      }
+      const done = current.cells.filter(([x,y]) => world[y][x] === current.type).length;
+      document.getElementById('builderStep').textContent = current.text;
+      document.getElementById('progressBar').style.width = `${Math.round((done / current.cells.length) * 100)}%`;
+    }
+
+    function autoHelp() {
+      const current = blueprint[blueprintIndex];
+      if (!current) return setMessage('La casa ya está lista. Ahora puedes decorar.');
+      const next = current.cells.find(([x,y]) => world[y][x] !== current.type);
+      if (!next) return checkBlueprintProgress();
+      const [x,y] = next;
+      world[y][x] = current.type;
+      selected = current.type;
+      renderInventory();
+      addStars(2);
+      setMessage(`Ayuda mágica: he puesto ${blockTypes[current.type].name}.`);
+      sparkle(window.innerWidth / 2, window.innerHeight / 2, '🪄');
+      checkBlueprintProgress();
+      renderWorld();
     }
 
     function renderQuiz() {
@@ -300,14 +406,12 @@
         setMessage('¡Correcto! Muy bien, campeón.');
         quizIndex = (quizIndex + 1) % quizList.length;
         renderQuiz();
-      } else {
-        setMessage('Casi casi. Prueba otra respuesta.');
-      }
+      } else setMessage('Casi casi. Prueba otra respuesta.');
     }
 
     function listenAnswer() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) { setMessage('Este navegador no permite responder hablando. Puedes tocar una respuesta.'); return; }
+      if (!SpeechRecognition) return setMessage('Este navegador no permite responder hablando. Puedes tocar una respuesta.');
       const btn = document.getElementById('voiceBtn');
       const rec = new SpeechRecognition();
       rec.lang = 'es-ES'; rec.interimResults = false; rec.maxAlternatives = 1;
@@ -319,27 +423,11 @@
       rec.start();
     }
 
-    function handleCellClick(x, y, ev) {
-      if (mode === 'build') {
-        if (world[y][x] === null) { world[y][x] = selected; addStars(1); sparkle(ev.clientX, ev.clientY, '✨'); setMessage(`Has puesto ${blockTypes[selected].name}.`); renderWorld(); checkMission(); }
-        else setMessage('Aquí ya hay un bloque. Puedes romperlo con el pico.');
-      } else {
-        if (world[y][x] !== null) {
-          const old = world[y][x]; world[y][x] = null; addStars(1);
-          if (old === 'stone' && Math.random() > 0.45) { gems++; setMessage('¡Plin! Has encontrado un diamante escondido.'); sparkle(ev.clientX, ev.clientY, '💎'); }
-          else { setMessage(`Has roto ${blockTypes[old].name}.`); sparkle(ev.clientX, ev.clientY, '⛏️'); }
-          updateHud(); renderWorld(); checkMission();
-        } else setMessage('Eso es aire. No se puede romper el aire, jeje.');
-      }
-    }
-
-    function setMode(newMode) { mode = newMode; document.getElementById('buildBtn').classList.toggle('active', mode === 'build'); document.getElementById('breakBtn').classList.toggle('active', mode === 'break'); setMessage(mode === 'build' ? 'Modo construir: toca una casilla vacía.' : 'Modo romper: toca un bloque con el pico.'); }
+    function setMode(newMode) { mode = newMode; document.getElementById('buildBtn').classList.toggle('active', mode === 'build'); document.getElementById('breakBtn').classList.toggle('active', mode === 'break'); setMessage(mode === 'build' ? 'Modo construir: toca las flechas amarillas.' : 'Modo romper: toca un bloque con el pico.'); }
     function movePlayer(dx) { player.x = Math.max(0, Math.min(cols - 1, player.x + dx)); setMessage(dx < 0 ? 'Caminando a la izquierda.' : 'Caminando a la derecha.'); renderWorld(); }
-    function magicAnimal() { const spot = { x: Math.floor(Math.random() * cols), y: 5 }; animal = { ...spot, emoji: mobs[Math.floor(Math.random() * mobs.length)] }; addStars(2); setMessage(`Ha venido un animalito ${animal.emoji}.`); renderWorld(); }
-    function openChest() { if (countBlock('chest') === 0) { setMessage('Primero coloca un cofre en el mundo.'); return; } Math.random() > 0.55 ? (gems++, addStars(3), setMessage('El cofre tenía un diamante.')) : (addStars(5), setMessage('El cofre tenía estrellas doradas.')); sparkle(window.innerWidth/2, window.innerHeight/2, '🎁'); updateHud(); checkMission(); }
+    function magicAnimal(talk = true) { const spot = { x: Math.floor(Math.random() * cols), y: 5 }; animal = { ...spot, emoji: mobs[Math.floor(Math.random() * mobs.length)] }; addStars(2); if (talk) setMessage(`Ha venido un animalito ${animal.emoji}.`); renderWorld(); }
+    function openChest() { if (countBlock('chest') === 0) return setMessage('Primero coloca un cofre en la casa.'); gems++; addStars(5); setMessage('El cofre tenía un diamante.'); sparkle(window.innerWidth/2, window.innerHeight/2, '💎'); updateHud(); }
     function countBlock(type) { let c = 0; for (const row of world) for (const cell of row) if (cell === type) c++; return c; }
-    function updateMission() { const m = missions[missionIndex]; document.getElementById('missionText').textContent = m.text; document.getElementById('progressBar').style.width = `${Math.min(Math.round((m.current()/m.goal)*100),100)}%`; }
-    function checkMission() { const m = missions[missionIndex]; if (m.check()) { addStars(10); level++; sparkle(window.innerWidth/2, window.innerHeight/2, '🏆'); missionIndex = Math.min(missionIndex + 1, missions.length - 1); setMessage('¡Misión completada! Nueva misión desbloqueada.'); updateHud(); updateMission(); } }
     function addStars(n) { stars += n; updateHud(); }
     function updateHud() { document.getElementById('stars').textContent = stars; document.getElementById('gems').textContent = gems; document.getElementById('level').textContent = level; }
     function setMessage(text, say = true) { lastMessage = text; document.getElementById('message').textContent = text; if (say) setTimeout(() => speak(text), 120); }
@@ -353,48 +441,35 @@
 
     function normalizeText(t) { return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9ñ ]/g, '').trim(); }
     function sparkle(x, y, emoji) { const s = document.createElement('div'); s.className = 'sparkle'; s.textContent = emoji; s.style.left = `${x}px`; s.style.top = `${y}px`; document.body.appendChild(s); setTimeout(() => s.remove(), 900); }
-    function resetWorld() { stars = 0; gems = 0; level = 1; missionIndex = 0; quizIndex = 0; selected = 'wood'; mode = 'build'; initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); setMode('build'); setMessage('Mundo nuevo creado. ¡A construir!'); }
+
+    function resetWorld() {
+      stars = 0; gems = 0; level = 1; quizIndex = 0; selected = 'wood'; mode = 'build';
+      initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(false); setMode('build');
+      setMessage('Mundo nuevo creado. Toca las flechas para hacer la casita.');
+    }
 
     let memoryCards = [];
     let firstMemoryCard = null;
     let memoryLocked = false;
 
-    function resetMemoryGame() {
+    function resetMemoryGame(talk = true) {
       const animalsMemory = ['🐶','🐱','🐷','🐮','🐸','🐔'];
-      memoryCards = [...animalsMemory, ...animalsMemory]
-        .sort(() => Math.random() - 0.5)
-        .map((emoji, index) => ({
-          emoji,
-          index,
-          visible: false,
-          matched: false
-        }));
-
+      memoryCards = [...animalsMemory, ...animalsMemory].sort(() => Math.random() - 0.5).map((emoji, index) => ({ emoji, index, selected: false, matched: false }));
       firstMemoryCard = null;
       memoryLocked = false;
       renderMemoryGame();
-      setMessage('Busca las parejas de animales.');
+      if (talk) setMessage('Toca dos animales iguales. Están casi visibles para ayudarte.');
     }
 
     function renderMemoryGame() {
-      const grid = document.getElementById('memoryGrid');
-      grid.innerHTML = '';
-
+      const grid = document.getElementById('memoryGrid'); grid.innerHTML = '';
       memoryCards.forEach((card, index) => {
         const btn = document.createElement('button');
         btn.className = 'memory-card';
-
-        if (!card.visible && !card.matched) {
-          btn.classList.add('hidden-card');
-          btn.textContent = '❓';
-        } else {
-          btn.textContent = card.emoji;
-        }
-
-        if (card.matched) {
-          btn.classList.add('matched');
-        }
-
+        if (!card.selected && !card.matched) btn.classList.add('soft-hidden');
+        if (card.selected) btn.classList.add('selected-card');
+        if (card.matched) btn.classList.add('matched');
+        btn.innerHTML = `<span>${card.emoji}</span>`;
         btn.onclick = () => flipMemoryCard(index);
         grid.appendChild(btn);
       });
@@ -402,49 +477,25 @@
 
     function flipMemoryCard(index) {
       if (memoryLocked) return;
-
       const card = memoryCards[index];
-      if (card.visible || card.matched) return;
-
-      card.visible = true;
+      if (card.selected || card.matched) return;
+      card.selected = true;
       renderMemoryGame();
-
-      if (firstMemoryCard === null) {
-        firstMemoryCard = index;
-        return;
-      }
-
+      if (firstMemoryCard === null) { firstMemoryCard = index; return; }
       const first = memoryCards[firstMemoryCard];
-
       if (first.emoji === card.emoji) {
-        first.matched = true;
-        card.matched = true;
-        firstMemoryCard = null;
-        addStars(3);
-        setMessage('¡Pareja encontrada!');
-        sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
-
-        if (memoryCards.every(c => c.matched)) {
-          addStars(10);
-          setMessage('¡Has encontrado todas las parejas!');
-          sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆');
-        }
-
+        first.matched = true; card.matched = true; firstMemoryCard = null;
+        addStars(3); setMessage('¡Pareja encontrada!'); sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
+        if (memoryCards.every(c => c.matched)) { addStars(10); setMessage('¡Has encontrado todas las parejas!'); sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆'); }
         renderMemoryGame();
       } else {
         memoryLocked = true;
-        setTimeout(() => {
-          first.visible = false;
-          card.visible = false;
-          firstMemoryCard = null;
-          memoryLocked = false;
-          setMessage('Casi casi. Prueba otra vez.');
-          renderMemoryGame();
-        }, 800);
+        setTimeout(() => { first.selected = false; card.selected = false; firstMemoryCard = null; memoryLocked = false; setMessage('Casi casi. Busca dos iguales.'); renderMemoryGame(); }, 700);
       }
     }
+
     window.addEventListener('resize', () => { const newCols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP; if (newCols !== cols) { cols = newCols; resetWorld(); } });
-    initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(); setMode('build'); setMessage('Mundo nuevo creado. ¡A construir!');
+    initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(false); setMode('build'); setMessage('Mundo nuevo creado. Toca las flechas para hacer la casita.');
   </script>
 </body>
 </html>
