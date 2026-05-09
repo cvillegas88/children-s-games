@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aventura de Cubitos para Tomás</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(#78d7ff 0%, #b8f7ff 42%, #8ee875 42%, #63c94e 100%);
+      min-height: 100vh;
+      color: #233044;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    .app { max-width: 1180px; margin: auto; padding: 12px; }
+
+    header {
+      background: rgba(255,255,255,0.94);
+      border: 5px solid #3b2f2f;
+      border-radius: 18px;
+      box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.25);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    h1 { margin: 0; font-size: clamp(26px, 5vw, 48px); letter-spacing: 1px; text-shadow: 3px 3px 0 #c7f9cc; }
+    .subtitle { font-weight: bold; color: #4b5563; margin-top: 4px; font-size: 16px; }
+    .hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-weight: 900; }
+    .pill { background: #fff1a8; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; box-shadow: 0 4px 0 #2b211e; font-size: 18px; }
+
+    .layout { display: grid; grid-template-columns: 1fr 340px; gap: 12px; }
+    .panel { background: rgba(255,255,255,0.94); border: 5px solid #3b2f2f; border-radius: 18px; box-shadow: 0 8px 0 #2b211e, 0 14px 24px rgba(0,0,0,0.22); padding: 12px; }
+    .world-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .message { flex: 1; min-height: 48px; background: #e0f2fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 8px 12px; font-size: 20px; font-weight: 900; display: flex; align-items: center; }
+
+    button { cursor: pointer; border: 4px solid #3b2f2f; border-radius: 14px; background: #fef3c7; box-shadow: 0 5px 0 #2b211e; font-weight: 900; font-family: inherit; transition: transform 0.08s, box-shadow 0.08s, filter 0.08s; }
+    button:active { transform: translateY(4px) scale(0.98); box-shadow: 0 1px 0 #2b211e; filter: brightness(0.95); }
+    .small-btn { padding: 9px 11px; font-size: 16px; }
+
+    .game-area { position: relative; background: linear-gradient(#6fd3ff 0%, #9be7ff 58%, #7fd957 58%, #70c948 100%); border: 5px solid #3b2f2f; border-radius: 18px; padding: 10px; overflow: hidden; }
+    .sun { position: absolute; top: 18px; right: 26px; width: 58px; height: 58px; background: #fde047; border: 5px solid #3b2f2f; box-shadow: 0 0 0 8px rgba(253,224,71,0.35); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 1; animation: sunMove 8s infinite linear; }
+    .cloud { position: absolute; top: 45px; left: 28px; font-size: 48px; z-index: 1; animation: cloudMove 7s infinite ease-in-out; }
+
+    .grid-world { position: relative; display: grid; grid-template-columns: repeat(16, minmax(28px, 1fr)); gap: 3px; z-index: 3; margin-top: 86px; }
+    .cell { aspect-ratio: 1 / 1; min-height: 32px; border-radius: 5px; border: 2px solid rgba(59,47,47,0.28); background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 3vw, 30px); box-shadow: inset 0 -5px rgba(0,0,0,0.12); position: relative; }
+    .empty { background: rgba(255,255,255,0.12); box-shadow: none; border-color: rgba(255,255,255,0.15); }
+    .grass { background: #4ade80; } .dirt { background: #9a5a28; } .stone { background: #9ca3af; } .wood { background: #b7791f; } .leaf { background: #22c55e; } .water { background: #38bdf8; } .flower { background: #f9a8d4; } .gold { background: #facc15; } .diamond { background: #67e8f9; } .chest { background: #d97706; } .bed { background: #f87171; } .torch { background: #fdba74; }
+
+    .steve, .mob { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 4; }
+    .steve { font-size: clamp(28px, 4vw, 38px); animation: wiggle 1.2s infinite ease-in-out; }
+    .mob { font-size: clamp(24px, 4vw, 34px); animation: hop 1.8s infinite ease-in-out; }
+
+    h2 { margin: 0 0 10px; font-size: 24px; }
+    .inventory { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .inv-btn { min-height: 78px; padding: 6px; font-size: 28px; background: #f8fafc; }
+    .inv-btn span { display: block; font-size: 13px; margin-top: 3px; }
+    .inv-btn.active { background: #fef08a; outline: 5px solid #22c55e; }
+    .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .tool-btn { padding: 12px 8px; font-size: 18px; }
+    .tool-btn.active { background: #bfdbfe; outline: 4px solid #2563eb; }
+
+    .quiz { background: #ede9fe; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+    .quiz-question { font-size: 19px; font-weight: 900; margin-bottom: 10px; }
+    .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .answer-btn { min-height: 68px; font-size: 22px; background: #fff7ed; }
+    .voice-btn { width: 100%; padding: 13px; margin-top: 10px; font-size: 18px; background: #dcfce7; }
+    .voice-btn.listening { background: #fecaca; animation: pulse 1s infinite; }
+
+    .mission { background: #ecfccb; border: 4px solid #3b2f2f; border-radius: 16px; padding: 12px; font-size: 18px; font-weight: 900; margin-bottom: 12px; }
+    .progress { height: 24px; background: white; border: 4px solid #3b2f2f; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #facc15); width: 0%; transition: width .25s ease; }
+    .actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .big-action { padding: 13px; font-size: 18px; background: #dbeafe; }
+    .danger { background: #fee2e2; } .good { background: #dcfce7; } .purple { background: #ede9fe; }
+    .guide { margin-top: 12px; font-size: 15px; line-height: 1.35; font-weight: 700; color: #374151; background: #fff7ed; border: 4px solid #3b2f2f; border-radius: 16px; padding: 10px; }
+    .sparkle { position: fixed; pointer-events: none; z-index: 999; font-size: 52px; animation: sparkle 900ms forwards ease-out; }
+
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+    @keyframes sparkle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1.6); opacity: 0; } }
+    @keyframes wiggle { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+    @keyframes hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes sunMove { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes cloudMove { 0%,100% { transform: translateX(0); } 50% { transform: translateX(45px); } }
+
+
+    .memory-game {
+      margin-top: 14px;
+      background: #fff7ed;
+      border: 5px solid #3b2f2f;
+      border-radius: 18px;
+      padding: 12px;
+    }
+
+    .memory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .memory-card {
+      min-height: 78px;
+      font-size: 38px;
+      background: #fde68a;
+    }
+
+    .memory-card.hidden-card {
+      background: #334155;
+      color: transparent;
+    }
+
+    .memory-card.matched {
+      background: #bbf7d0;
+    }
+    
+    @media (max-width: 900px) {
+      header { grid-template-columns: 1fr; text-align: center; }
+      .hud { justify-content: center; }
+      .layout { grid-template-columns: 1fr; }
+      .grid-world { grid-template-columns: repeat(12, minmax(24px, 1fr)); }
+      .inventory { grid-template-columns: repeat(5, 1fr); }
+      .inv-btn { min-height: 68px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>⛏️ Aventura de Cubitos</h1>
+        <div class="subtitle">Construye, rompe bloques, responde tocando o hablando y ayuda a los animales</div>
+      </div>
+      <div class="hud">
+        <div class="pill">⭐ <span id="stars">0</span></div>
+        <div class="pill">💎 <span id="gems">0</span></div>
+        <div class="pill">🏆 <span id="level">1</span></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="world-top">
+          <div class="message" id="message">Hola peque. Toca bloques para construir tu mundo.</div>
+          <button class="small-btn" onclick="speak(lastMessage)">🔊 Repetir</button>
+        </div>
+        <div class="game-area">
+          <div class="sun">☀️</div>
+          <div class="cloud">☁️</div>
+          <div class="grid-world" id="world"></div>
+        </div>
+        <div class="memory-game">
+          <div class="memory-header">
+            <h2>🐾 Mini juego para Tomás: parejas de animales</h2>
+            <button class="small-btn" onclick="resetMemoryGame()">🔄 Nueva partida</button>
+          </div>
+          <div class="memory-grid" id="memoryGrid"></div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h2>🎒 Mochila</h2>
+        <div class="inventory" id="inventory"></div>
+
+        <h2>🛠️ Herramienta</h2>
+        <div class="tools">
+          <button class="tool-btn active" id="buildBtn" onclick="setMode('build')">🧱 Poner</button>
+          <button class="tool-btn" id="breakBtn" onclick="setMode('break')">⛏️ Romper</button>
+        </div>
+
+        <div class="quiz">
+          <div class="quiz-question" id="quizQuestion">Pregunta...</div>
+          <div class="answers" id="answers"></div>
+          <button class="voice-btn" id="voiceBtn" onclick="listenAnswer()">🎤 Responder hablando</button>
+        </div>
+
+        <div class="mission">
+          <div id="missionText">Misión: construye una casita con 6 bloques de madera.</div>
+          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+
+        <div class="actions">
+          <button class="big-action good" onclick="movePlayer(-1,0)">⬅️ Izquierda</button>
+          <button class="big-action good" onclick="movePlayer(1,0)">➡️ Derecha</button>
+          <button class="big-action purple" onclick="magicAnimal()">🐷 Llamar animal</button>
+          <button class="big-action" onclick="openChest()">🎁 Abrir cofre</button>
+          <button class="big-action danger" onclick="resetWorld()">🔄 Mundo nuevo</button>
+        </div>
+
+        <div class="guide">
+          <strong>Modo peque:</strong><br>
+          Nada de escribir. Puede tocar una respuesta o pulsar el micro y decirla en voz alta.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const COLS_DESKTOP = 16, COLS_MOBILE = 12, ROWS = 10;
+    const blockTypes = {
+      grass: { name: 'Hierba', emoji: '🌱', class: 'grass' }, dirt: { name: 'Tierra', emoji: '🟫', class: 'dirt' }, stone: { name: 'Piedra', emoji: '⬜', class: 'stone' }, wood: { name: 'Madera', emoji: '🪵', class: 'wood' }, leaf: { name: 'Hojas', emoji: '🍃', class: 'leaf' }, water: { name: 'Agua', emoji: '💧', class: 'water' }, flower: { name: 'Flor', emoji: '🌸', class: 'flower' }, torch: { name: 'Antorcha', emoji: '🔥', class: 'torch' }, bed: { name: 'Cama', emoji: '🛏️', class: 'bed' }, chest: { name: 'Cofre', emoji: '🎁', class: 'chest' }, diamond: { name: 'Diamante', emoji: '💎', class: 'diamond' }, gold: { name: 'Oro', emoji: '🟨', class: 'gold' }
+    };
+    const inventoryBlocks = ['grass','dirt','stone','wood','leaf','water','flower','torch','bed','chest'];
+    const mobs = ['🐷','🐮','🐑','🐔','🐸','🐶'];
+
+    const quizList = [
+      { q: '¿Qué bloque sirve para hacer una casa?', options: ['🪵 Madera', '💧 Agua', '🌸 Flor', '🐷 Cerdito'], answer: 'madera', say: 'madera' },
+      { q: '¿Cuál es el animal que hace oink oink?', options: ['🐷 Cerdito', '🐮 Vaca', '🐔 Gallina', '🐸 Rana'], answer: 'cerdito', say: 'cerdito' },
+      { q: '¿Qué bloque parece agua?', options: ['💧 Agua', '🔥 Antorcha', '🪵 Madera', '🛏️ Cama'], answer: 'agua', say: 'agua' },
+      { q: '¿Qué encontramos al romper piedra a veces?', options: ['💎 Diamante', '🌸 Flor', '🛏️ Cama', '🐮 Vaca'], answer: 'diamante', say: 'diamante' },
+      { q: '¿Dónde duerme el personaje?', options: ['🛏️ Cama', '🎁 Cofre', '💧 Agua', '🍃 Hojas'], answer: 'cama', say: 'cama' },
+      { q: '¿Qué bloque da luz?', options: ['🔥 Antorcha', '🟫 Tierra', '🌱 Hierba', '🐑 Oveja'], answer: 'antorcha', say: 'antorcha' },
+      { q: '¿Cuántas flores hay que plantar en la misión?', options: ['4', '1', '8', '10'], answer: '4', say: 'cuatro' }
+    ];
+
+    let cols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP;
+    let world = [], selected = 'wood', mode = 'build';
+    let player = { x: 2, y: 5 }, animal = { x: 8, y: 5, emoji: '🐷' };
+    let stars = 0, gems = 0, level = 1, missionIndex = 0, quizIndex = 0;
+    let lastMessage = 'Hola peque. Toca bloques para construir tu mundo.';
+    let speaking = false;
+
+    const missions = [
+      { text: 'Misión: construye una casita con 6 bloques de madera.', check: () => countBlock('wood') >= 6, goal: 6, current: () => Math.min(countBlock('wood'), 6) },
+      { text: 'Misión: planta 4 flores para los animales.', check: () => countBlock('flower') >= 4, goal: 4, current: () => Math.min(countBlock('flower'), 4) },
+      { text: 'Misión: pon una cama y un cofre en tu casita.', check: () => countBlock('bed') >= 1 && countBlock('chest') >= 1, goal: 2, current: () => Math.min(countBlock('bed') + countBlock('chest'), 2) },
+      { text: 'Misión: encuentra 2 diamantes rompiendo piedra.', check: () => gems >= 2, goal: 2, current: () => Math.min(gems, 2) },
+      { text: 'Misión final: crea un jardín con agua, flores y hojas.', check: () => countBlock('water') >= 2 && countBlock('flower') >= 4 && countBlock('leaf') >= 3, goal: 9, current: () => Math.min(countBlock('water') + countBlock('flower') + countBlock('leaf'), 9) }
+    ];
+
+    function initWorld() {
+      world = [];
+      for (let y = 0; y < ROWS; y++) {
+        const row = [];
+        for (let x = 0; x < cols; x++) row.push(y >= 7 ? 'dirt' : y === 6 ? 'grass' : null);
+        world.push(row);
+      }
+      world[5][5] = 'stone'; world[5][6] = 'stone'; world[5][7] = 'stone'; world[4][6] = 'stone';
+      if (cols > 8) { world[5][cols-4] = 'wood'; world[4][cols-4] = 'wood'; world[3][cols-4] = 'leaf'; world[3][cols-5] = 'leaf'; world[3][cols-3] = 'leaf'; world[2][cols-4] = 'leaf'; }
+      player = { x: 2, y: 5 }; animal = { x: Math.min(8, cols - 2), y: 5, emoji: '🐷' };
+    }
+
+    function renderInventory() {
+      const inv = document.getElementById('inventory'); inv.innerHTML = '';
+      inventoryBlocks.forEach(key => {
+        const b = blockTypes[key]; const btn = document.createElement('button');
+        btn.className = 'inv-btn' + (selected === key ? ' active' : '');
+        btn.innerHTML = `${b.emoji}<span>${b.name}</span>`;
+        btn.onclick = () => { selected = key; renderInventory(); setMessage(`Has elegido ${b.name}`); };
+        inv.appendChild(btn);
+      });
+    }
+
+    function renderWorld() {
+      const el = document.getElementById('world'); el.innerHTML = ''; el.style.gridTemplateColumns = `repeat(${cols}, minmax(24px, 1fr))`;
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x < cols; x++) {
+        const cell = document.createElement('div'); const type = world[y][x];
+        cell.className = 'cell ' + (type ? blockTypes[type].class : 'empty');
+        if (type) cell.textContent = blockTypes[type].emoji;
+        if (player.x === x && player.y === y) { const p = document.createElement('div'); p.className = 'steve'; p.textContent = '🧒'; cell.appendChild(p); }
+        if (animal.x === x && animal.y === y) { const m = document.createElement('div'); m.className = 'mob'; m.textContent = animal.emoji; cell.appendChild(m); }
+        cell.onclick = (ev) => handleCellClick(x, y, ev);
+        el.appendChild(cell);
+      }
+      updateMission();
+    }
+
+    function renderQuiz() {
+      const quiz = quizList[quizIndex];
+      document.getElementById('quizQuestion').textContent = quiz.q;
+      const answers = document.getElementById('answers'); answers.innerHTML = '';
+      quiz.options.forEach(opt => {
+        const btn = document.createElement('button'); btn.className = 'answer-btn'; btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt.toLowerCase());
+        answers.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(text) {
+      const quiz = quizList[quizIndex];
+      const normalized = normalizeText(text);
+      if (normalized.includes(normalizeText(quiz.answer)) || normalized.includes(normalizeText(quiz.say))) {
+        addStars(5); sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
+        setMessage('¡Correcto! Muy bien, campeón.');
+        quizIndex = (quizIndex + 1) % quizList.length;
+        renderQuiz();
+      } else {
+        setMessage('Casi casi. Prueba otra respuesta.');
+      }
+    }
+
+    function listenAnswer() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) { setMessage('Este navegador no permite responder hablando. Puedes tocar una respuesta.'); return; }
+      const btn = document.getElementById('voiceBtn');
+      const rec = new SpeechRecognition();
+      rec.lang = 'es-ES'; rec.interimResults = false; rec.maxAlternatives = 1;
+      btn.classList.add('listening'); btn.textContent = '🎧 Te escucho...';
+      setMessage('Te escucho. Di la respuesta en voz alta.');
+      rec.onresult = e => { const said = e.results[0][0].transcript; btn.classList.remove('listening'); btn.textContent = '🎤 Responder hablando'; setMessage(`Has dicho: ${said}`, false); setTimeout(() => checkAnswer(said), 300); };
+      rec.onerror = () => { btn.classList.remove('listening'); btn.textContent = '🎤 Responder hablando'; setMessage('No te he entendido. Toca una respuesta o prueba otra vez.'); };
+      rec.onend = () => { btn.classList.remove('listening'); btn.textContent = '🎤 Responder hablando'; };
+      rec.start();
+    }
+
+    function handleCellClick(x, y, ev) {
+      if (mode === 'build') {
+        if (world[y][x] === null) { world[y][x] = selected; addStars(1); sparkle(ev.clientX, ev.clientY, '✨'); setMessage(`Has puesto ${blockTypes[selected].name}.`); renderWorld(); checkMission(); }
+        else setMessage('Aquí ya hay un bloque. Puedes romperlo con el pico.');
+      } else {
+        if (world[y][x] !== null) {
+          const old = world[y][x]; world[y][x] = null; addStars(1);
+          if (old === 'stone' && Math.random() > 0.45) { gems++; setMessage('¡Plin! Has encontrado un diamante escondido.'); sparkle(ev.clientX, ev.clientY, '💎'); }
+          else { setMessage(`Has roto ${blockTypes[old].name}.`); sparkle(ev.clientX, ev.clientY, '⛏️'); }
+          updateHud(); renderWorld(); checkMission();
+        } else setMessage('Eso es aire. No se puede romper el aire, jeje.');
+      }
+    }
+
+    function setMode(newMode) { mode = newMode; document.getElementById('buildBtn').classList.toggle('active', mode === 'build'); document.getElementById('breakBtn').classList.toggle('active', mode === 'break'); setMessage(mode === 'build' ? 'Modo construir: toca una casilla vacía.' : 'Modo romper: toca un bloque con el pico.'); }
+    function movePlayer(dx) { player.x = Math.max(0, Math.min(cols - 1, player.x + dx)); setMessage(dx < 0 ? 'Caminando a la izquierda.' : 'Caminando a la derecha.'); renderWorld(); }
+    function magicAnimal() { const spot = { x: Math.floor(Math.random() * cols), y: 5 }; animal = { ...spot, emoji: mobs[Math.floor(Math.random() * mobs.length)] }; addStars(2); setMessage(`Ha venido un animalito ${animal.emoji}.`); renderWorld(); }
+    function openChest() { if (countBlock('chest') === 0) { setMessage('Primero coloca un cofre en el mundo.'); return; } Math.random() > 0.55 ? (gems++, addStars(3), setMessage('El cofre tenía un diamante.')) : (addStars(5), setMessage('El cofre tenía estrellas doradas.')); sparkle(window.innerWidth/2, window.innerHeight/2, '🎁'); updateHud(); checkMission(); }
+    function countBlock(type) { let c = 0; for (const row of world) for (const cell of row) if (cell === type) c++; return c; }
+    function updateMission() { const m = missions[missionIndex]; document.getElementById('missionText').textContent = m.text; document.getElementById('progressBar').style.width = `${Math.min(Math.round((m.current()/m.goal)*100),100)}%`; }
+    function checkMission() { const m = missions[missionIndex]; if (m.check()) { addStars(10); level++; sparkle(window.innerWidth/2, window.innerHeight/2, '🏆'); missionIndex = Math.min(missionIndex + 1, missions.length - 1); setMessage('¡Misión completada! Nueva misión desbloqueada.'); updateHud(); updateMission(); } }
+    function addStars(n) { stars += n; updateHud(); }
+    function updateHud() { document.getElementById('stars').textContent = stars; document.getElementById('gems').textContent = gems; document.getElementById('level').textContent = level; }
+    function setMessage(text, say = true) { lastMessage = text; document.getElementById('message').textContent = text; if (say) setTimeout(() => speak(text), 120); }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window) || speaking) return;
+      const u = new SpeechSynthesisUtterance(text); u.lang = 'es-ES'; u.rate = 0.9; u.pitch = 1.1;
+      speaking = true; u.onend = () => speaking = false; u.onerror = () => speaking = false;
+      window.speechSynthesis.speak(u);
+    }
+
+    function normalizeText(t) { return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9ñ ]/g, '').trim(); }
+    function sparkle(x, y, emoji) { const s = document.createElement('div'); s.className = 'sparkle'; s.textContent = emoji; s.style.left = `${x}px`; s.style.top = `${y}px`; document.body.appendChild(s); setTimeout(() => s.remove(), 900); }
+    function resetWorld() { stars = 0; gems = 0; level = 1; missionIndex = 0; quizIndex = 0; selected = 'wood'; mode = 'build'; initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); setMode('build'); setMessage('Mundo nuevo creado. ¡A construir!'); }
+
+    let memoryCards = [];
+    let firstMemoryCard = null;
+    let memoryLocked = false;
+
+    function resetMemoryGame() {
+      const animalsMemory = ['🐶','🐱','🐷','🐮','🐸','🐔'];
+      memoryCards = [...animalsMemory, ...animalsMemory]
+        .sort(() => Math.random() - 0.5)
+        .map((emoji, index) => ({
+          emoji,
+          index,
+          visible: false,
+          matched: false
+        }));
+
+      firstMemoryCard = null;
+      memoryLocked = false;
+      renderMemoryGame();
+      setMessage('Busca las parejas de animales.');
+    }
+
+    function renderMemoryGame() {
+      const grid = document.getElementById('memoryGrid');
+      grid.innerHTML = '';
+
+      memoryCards.forEach((card, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'memory-card';
+
+        if (!card.visible && !card.matched) {
+          btn.classList.add('hidden-card');
+          btn.textContent = '❓';
+        } else {
+          btn.textContent = card.emoji;
+        }
+
+        if (card.matched) {
+          btn.classList.add('matched');
+        }
+
+        btn.onclick = () => flipMemoryCard(index);
+        grid.appendChild(btn);
+      });
+    }
+
+    function flipMemoryCard(index) {
+      if (memoryLocked) return;
+
+      const card = memoryCards[index];
+      if (card.visible || card.matched) return;
+
+      card.visible = true;
+      renderMemoryGame();
+
+      if (firstMemoryCard === null) {
+        firstMemoryCard = index;
+        return;
+      }
+
+      const first = memoryCards[firstMemoryCard];
+
+      if (first.emoji === card.emoji) {
+        first.matched = true;
+        card.matched = true;
+        firstMemoryCard = null;
+        addStars(3);
+        setMessage('¡Pareja encontrada!');
+        sparkle(window.innerWidth / 2, window.innerHeight / 2, '⭐');
+
+        if (memoryCards.every(c => c.matched)) {
+          addStars(10);
+          setMessage('¡Has encontrado todas las parejas!');
+          sparkle(window.innerWidth / 2, window.innerHeight / 2, '🏆');
+        }
+
+        renderMemoryGame();
+      } else {
+        memoryLocked = true;
+        setTimeout(() => {
+          first.visible = false;
+          card.visible = false;
+          firstMemoryCard = null;
+          memoryLocked = false;
+          setMessage('Casi casi. Prueba otra vez.');
+          renderMemoryGame();
+        }, 800);
+      }
+    }
+    window.addEventListener('resize', () => { const newCols = window.innerWidth <= 900 ? COLS_MOBILE : COLS_DESKTOP; if (newCols !== cols) { cols = newCols; resetWorld(); } });
+    initWorld(); renderInventory(); renderWorld(); renderQuiz(); updateHud(); resetMemoryGame(); setMode('build'); setMessage('Mundo nuevo creado. ¡A construir!');
+  </script>
+</body>
+</html>
