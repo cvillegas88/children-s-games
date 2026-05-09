@@ -127,15 +127,211 @@
     @keyframes targetPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
     @keyframes fingerBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-    @media (max-width: 900px) {
-      header { grid-template-columns: 1fr; text-align: center; }
-      .hud { justify-content: center; }
-      .layout { grid-template-columns: 1fr; }
-      .grid-world { grid-template-columns: repeat(12, minmax(24px, 1fr)); }
-      .inventory { grid-template-columns: repeat(5, 1fr); }
-      .inv-btn { min-height: 68px; }
-      .memory-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+    /* ================================
+   OPTIMIZACIÓN TABLET HORIZONTAL
+   Menú compacto siempre a la derecha
+================================ */
+.layout {
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+}
+
+aside.panel {
+  position: sticky;
+  top: 8px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 9px;
+}
+
+aside.panel h2 {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.inventory {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.inv-btn {
+  min-height: 58px;
+  padding: 4px;
+  font-size: 23px;
+  border-width: 3px;
+  border-radius: 12px;
+  box-shadow: 0 3px 0 #2b211e;
+}
+
+.inv-btn span {
+  font-size: 10px;
+  margin-top: 1px;
+}
+
+.inv-btn.active {
+  outline: 4px solid #22c55e;
+}
+
+.tools {
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tool-btn {
+  padding: 8px 5px;
+  font-size: 15px;
+  border-width: 3px;
+  box-shadow: 0 3px 0 #2b211e;
+}
+
+.builder-card,
+.quiz,
+.guide {
+  padding: 8px;
+  margin-bottom: 8px;
+  border-width: 4px;
+}
+
+.builder-title {
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.builder-step {
+  font-size: 15px;
+  padding: 7px;
+  line-height: 1.2;
+}
+
+.progress {
+  height: 18px;
+  border-width: 3px;
+  margin-top: 6px;
+}
+
+.quiz-question {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.answers {
+  gap: 6px;
+}
+
+.answer-btn {
+  min-height: 48px;
+  font-size: 17px;
+  padding: 5px;
+  border-width: 3px;
+  box-shadow: 0 3px 0 #2b211e;
+}
+
+.voice-btn {
+  padding: 8px;
+  margin-top: 7px;
+  font-size: 15px;
+  border-width: 3px;
+  box-shadow: 0 3px 0 #2b211e;
+}
+
+.actions {
+  gap: 6px;
+}
+
+.big-action {
+  padding: 8px;
+  font-size: 15px;
+  border-width: 3px;
+  box-shadow: 0 3px 0 #2b211e;
+}
+
+.guide {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.game-area {
+  padding: 8px;
+}
+
+.grid-world {
+  margin-top: 72px;
+}
+
+.cell {
+  min-height: 28px;
+}
+
+.memory-game {
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.memory-header h2 {
+  font-size: 20px;
+}
+
+.memory-card {
+  min-height: 58px;
+  font-size: 30px;
+}
+
+@media (min-width: 901px) and (max-width: 1250px) {
+  .app {
+    max-width: 100vw;
+    padding: 6px;
+  }
+
+  header {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .pill {
+    font-size: 15px;
+    padding: 6px 9px;
+  }
+
+  .layout {
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 285px;
+  }
+
+  .panel {
+    padding: 8px;
+    border-width: 4px;
+    box-shadow: 0 5px 0 #2b211e;
+  }
+
+  .message {
+    font-size: 17px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 900px) {
+  header { grid-template-columns: 1fr; text-align: center; }
+  .hud { justify-content: center; }
+  .layout { grid-template-columns: 1fr; }
+  aside.panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .grid-world { grid-template-columns: repeat(12, minmax(24px, 1fr)); }
+  .inventory { grid-template-columns: repeat(5, 1fr); }
+  .inv-btn { min-height: 62px; }
+  .memory-grid { grid-template-columns: repeat(3, 1fr); }
+}
   </style>
 </head>
 <body>
